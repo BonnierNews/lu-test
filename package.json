@@ -1,0 +1,46 @@
+{
+  "name": "lu-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": ">=16 <=18"
+  },
+  "scripts": {
+    "mocha": "mocha",
+    "lint": "eslint .",
+    "test": "mocha && eslint --ext js . --cache && depcheck --ignores=\"prettier\"",
+    "format": "prettier **/*.js --write && eslint . --fix",
+    "prettier": "prettier \"**/*.{js,json,md}\"",
+    "prettier:apply": "npm run prettier -- --write",
+    "coverage": "nyc npm test",
+    "check-coverage": "nyc check-coverage"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {},
+  "devDependencies": {
+    "eslint-config-exp": "^0.5.0",
+    "chai": "^4.3.4",
+    "chai-exclude": "^2.0.3",
+    "depcheck": "^1.4.0",
+    "eslint": "^8.32.0",
+    "mocha": "^9.2.0",
+    "mocha-cakes-2": "^3.3.0",
+    "nyc": "^15.1.0",
+    "prettier": "^2.1.1",
+    "@google-cloud/storage": "^5.18.3",
+    "aws-sdk": "^2.1106.0",
+    "basic-ftp": "^4.6.6",
+    "csv-parse": "^5.3.3",
+    "event-stream": "^4.0.1",
+    "exp-config": "^3.0.0",
+    "moment": "^2.29.2",
+    "nock": "^13.0.11",
+    "sinon": "^15.0.0",
+    "ssh2-sftp-client": "^7.2.3",
+    "supertest": "^6.3.3",
+    "google-auth-library": "8.7.0"
+  }
+}

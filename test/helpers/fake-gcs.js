@@ -1,102 +1,85 @@
 "use strict";
 
 const { Writable, Readable } = require("stream");
-const { Storage } = require("@google-cloud/storage");
+const { Storage, Bucket } = require("@google-cloud/storage");
 const sandbox = require("sinon").createSandbox();
+const config = require("exp-config");
 
-let writes = {};
+let writes = {}, mocks = {}, readable = {};
+let bucketStub, fileStub;
 
-let stub;
-
-const mocks = {};
-
-function mockFile(path, opts = { times: 1, readableData: "", exists: false, throw: null }) {
-  const pathParts = path.replace("gs://", "").split("/");
-  const filePath = pathParts.join("/");
-  if (!(stub && mocks[filePath])) {
-    // eslint-disable-next-line
-    stub = sandbox.stub(Storage.prototype, "bucket").callsFake((bucket) => {
-      return {
-        // eslint-disable-next-line
-        file: (f) => {
-          return {
-            createWriteStream: () => {
-              const writable = new Writable({
-                write: function (chunk, encoding, next) {
-                  if (writes[path]) {
-                    writes[path] += chunk.toString();
-                  } else {
-                    writes[path] = chunk.toString();
-                  }
-                  next();
-                },
-              });
-              return writable;
-            },
-            createReadStream: () => {
-              const readable = new Readable();
-              if (opts.readableData) {
-
-                if (Buffer.isBuffer(opts.readableData)) {
-                  readable.push(Buffer.from(opts.readableData));
-                } else {
-                  opts.readableData
-                    .split("\n")
-                    .filter(Boolean)
-                    .forEach((o) => {
-                      readable.push(`${o}\n`, opts.encoding || "utf-8");
-                    });
-                }
-              }
-              readable.push(null);
-              return readable;
-            },
-            exists: () => {
-              return [ opts.exists || Boolean(opts.readableData) ];
-            },
-            // eslint-disable-next-line
-            getFiles: ({ prefix }) => {
-              return [ path ];
-            },
-          };
-        },
-      };
+function getWriter(key) {
+  return () => {
+    return new Writable({
+      write: function (chunk, _, next) {
+        if (writes[key]) {
+          writes[key] += chunk.toString();
+        } else {
+          writes[key] = chunk.toString();
+        }
+        next();
+      },
     });
-  }
+  };
 }
 
-// function readError(target, message = "gcs file stream read error") {
-//   if (!readStreamStub) {
-//     readStreamStub = sandbox.stub(gcs, "createReadStream");
-//   }
-//   readStreamStub.withArgs(target).throws(new Error(message));
-// }
+function getOrCreateFileMock(path, opts) {
+  const { Key } = parseUri(path);
 
-// function listError(path, message = "gcs list error") {
-//   if (!listStub) listStub = sandbox.stub(gcs, "list");
+  if (mocks[Key]) throw new Error("already implemented");
 
-//   listStub.withArgs(path).throws(new Error(message));
-// }
+  readable[Key] = Readable.from(opts.content, { encoding: "utf-8" });
 
-// function writeError(target, message = "gcs file stream error") {
-//   if (!writeStreamStub) {
-//     writeStreamStub = sandbox.stub(gcs, "createWriteStream");
-//   }
-//   writeStreamStub.withArgs(target).throws(new Error(message));
-// }
+  mocks[Key] = (key) => {
+    return {
+      createWriteStream: getWriter(key),
+      createReadStream: () => readable[key],
+      exists: () => [ Boolean(opts.content) ],
+      getFiles: () => [ path ],
+    };
+  };
+
+  return mocks[Key];
+}
+
+function mockFile(path, opts = { content: "" }) {
+  const { Bucket: bucket } = parseUri(path);
+  if (!bucketStub) bucketStub = sandbox.stub(Storage.prototype, "bucket");
+  if (!fileStub) fileStub = sandbox.stub(Bucket.prototype, "file");
+
+  bucketStub.withArgs(bucket).returns({ file: getOrCreateFileMock(path, opts) });
+
+}
 
 function written(path) {
-  return writes[path];
+  const { Key } = parseUri(path);
+  return writes[Key];
 }
 
 function reset() {
+  bucketStub = null;
+  fileStub = null;
+  mocks = {};
   writes = {};
-  stub = null;
+  readable = {};
   sandbox.restore();
+}
+
+function parseUri(uri) {
+  const parts = new URL(uri);
+  if (parts.protocol === "gs:") {
+    const conf = {
+      Bucket: parts.host,
+      Key: parts.pathname.slice(1),
+    };
+    if (conf.Bucket !== config.gcs.bucket) throw new Error(`Invalid gcs bucket ${conf.Bucket}`);
+    return conf;
+  }
 }
 
 module.exports = {
   mockFile,
   reset,
   written,
+  writes,
 };

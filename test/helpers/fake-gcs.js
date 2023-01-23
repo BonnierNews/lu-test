@@ -48,7 +48,6 @@ function mockFile(path, opts = { content: "" }) {
   if (!fileStub) fileStub = sandbox.stub(Bucket.prototype, "file");
 
   bucketStub.withArgs(bucket).returns({ file: getOrCreateFileMock(path, opts) });
-
 }
 
 function written(path) {

@@ -19,7 +19,7 @@ function mockFile(path, opts = { content: "" }) {
 function getOrCreateFileMock(path, opts) {
   const { Bucket: bucket, Key } = parseUri(path);
 
-  if (mocks[Key]) throw new Error("already implemented");
+  if (mocks[Key]) throw new Error(`${path} has already been mocked`);
 
   readable[Key] = Readable.from(opts.content, { encoding: "utf-8" });
 

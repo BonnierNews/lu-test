@@ -8,6 +8,33 @@ const config = require("exp-config");
 let writes = {}, mocks = {}, readable = {};
 let bucketStub, fileStub;
 
+function mockFile(path, opts = { content: "" }) {
+  const { Bucket: bucket } = parseUri(path);
+  if (!bucketStub) bucketStub = sandbox.stub(Storage.prototype, "bucket");
+  if (!fileStub) fileStub = sandbox.stub(Bucket.prototype, "file");
+
+  bucketStub.withArgs(bucket).returns({ file: getOrCreateFileMock(path, opts) });
+}
+
+function getOrCreateFileMock(path, opts) {
+  const { Bucket: bucket, Key } = parseUri(path);
+
+  if (mocks[Key]) throw new Error("already implemented");
+
+  readable[Key] = Readable.from(opts.content, { encoding: "utf-8" });
+
+  mocks[Key] = (key) => {
+    return {
+      createWriteStream: getWriter(key),
+      createReadStream: () => readable[key],
+      exists: () => [ Boolean(opts.content) ],
+      getFiles: ({ prefix }) => Object.keys(readable).map((s) => `gs://${bucket}/${s}`).filter((s) => s.includes(prefix)),
+    };
+  };
+
+  return mocks[Key];
+}
+
 function getWriter(key) {
   return () => {
     return new Writable({
@@ -21,33 +48,6 @@ function getWriter(key) {
       },
     });
   };
-}
-
-function getOrCreateFileMock(path, opts) {
-  const { Key } = parseUri(path);
-
-  if (mocks[Key]) throw new Error("already implemented");
-
-  readable[Key] = Readable.from(opts.content, { encoding: "utf-8" });
-
-  mocks[Key] = (key) => {
-    return {
-      createWriteStream: getWriter(key),
-      createReadStream: () => readable[key],
-      exists: () => [ Boolean(opts.content) ],
-      getFiles: () => [ path ],
-    };
-  };
-
-  return mocks[Key];
-}
-
-function mockFile(path, opts = { content: "" }) {
-  const { Bucket: bucket } = parseUri(path);
-  if (!bucketStub) bucketStub = sandbox.stub(Storage.prototype, "bucket");
-  if (!fileStub) fileStub = sandbox.stub(Bucket.prototype, "file");
-
-  bucketStub.withArgs(bucket).returns({ file: getOrCreateFileMock(path, opts) });
 }
 
 function written(path) {
@@ -80,5 +80,4 @@ module.exports = {
   mockFile,
   reset,
   written,
-  writes,
 };

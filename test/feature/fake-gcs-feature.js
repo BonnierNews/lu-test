@@ -1,11 +1,12 @@
 "use strict";
 
-const fakeGcs = require("../helpers/fake-gcs");
+const { Storage } = require("@google-cloud/storage");
 const stream = require("stream");
 const { promisify } = require("util");
-const pipeline = promisify(stream.pipeline);
+
 const config = require("exp-config");
-const { Storage } = require("@google-cloud/storage");
+const fakeGcs = require("../helpers/fake-gcs");
+const pipeline = promisify(stream.pipeline);
 
 Feature("fake-gcs feature", () => {
   beforeEachScenario(fakeGcs.reset);
@@ -19,12 +20,12 @@ Feature("fake-gcs feature", () => {
       const writeStream = storage.bucket("some-bucket").file("dir/file.txt").createWriteStream();
 
       const readStream = new stream.Readable();
-      readStream.push("blahoga\n");
+      readStream.push("some text\n");
       readStream.push(null);
       await pipeline(readStream, writeStream);
     });
     Then("we should have cached a written file", () => {
-      fakeGcs.written(filePath).should.eql("blahoga\n");
+      fakeGcs.written(filePath).should.eql("some text\n");
     });
   });
 

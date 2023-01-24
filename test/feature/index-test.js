@@ -7,15 +7,19 @@ const expectedExports = [
   "fakeApi",
   "fakeFtp",
   "fakeGcs",
-  "fakeS3",
-  "fakeSes",
   "fakeSftp",
   "fileUtils",
+  "clone",
   "messageHelper",
   "pdfReader",
-  "clone",
-  "GCP",
   "requestHelper",
+  "assertHelpers",
+  "buildMessage",
+  "fakeCloudTask",
+  "fakeGcpAuth",
+  "fakePubSub",
+  "run",
+  "initFakeApi",
 ];
 
 describe("Exposed features", () => {
@@ -27,10 +31,9 @@ describe("Exposed features", () => {
 
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      const list = exports.filter((val) => !expectedExports.includes(val));
-      const list2 = expectedExports.filter((val) => !exports.includes(val));
-      expect(list.length).to.equal(0);
-      expect(list2.length).to.equal(0);
+      const list = exports.join(",");
+      const expectedList = expectedExports.join(",");
+      expect(list).to.equal(expectedList);
     });
   });
 });

@@ -5,10 +5,11 @@
     "secretAccessKey": "REPLACED_BY_ENV"
   },
   "gcs": {
-    "bucket": "test-bucket"
+    "bucket": "some-bucket"
   },
   "ses": {
     "accessKeyId": "REPLACED_BY_ENV",
     "secretAccessKey": "REPLACED_BY_ENV"
-  }
+  },
+  "proxyUrl": "http://example.com"
 }

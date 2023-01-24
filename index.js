@@ -17,7 +17,7 @@ const requestHelper = require("./test/helpers/request-helper");
 const run = require("./test/helpers/run");
 
 module.exports = {
-  fakeApi,
+  fakeApi: fakeApi(),
   fakeFtp,
   fakeGcs,
   fakeSftp,
@@ -32,4 +32,5 @@ module.exports = {
   fakeGcpAuth,
   fakePubSub,
   run,
+  initFakeApi: fakeApi,
 };

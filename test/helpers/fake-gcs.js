@@ -1,17 +1,16 @@
 "use strict";
 
 const { Writable, Readable } = require("stream");
-const { Storage, Bucket } = require("@google-cloud/storage");
+const { Storage } = require("@google-cloud/storage");
 const sandbox = require("sinon").createSandbox();
 const config = require("exp-config");
 
 let writes = {}, mocks = {}, readable = {};
-let bucketStub, fileStub;
+let bucketStub;
 
 function mockFile(path, opts = { content: "" }) {
   const { Bucket: bucket } = parseUri(path);
   if (!bucketStub) bucketStub = sandbox.stub(Storage.prototype, "bucket");
-  if (!fileStub) fileStub = sandbox.stub(Bucket.prototype, "file");
 
   bucketStub.withArgs(bucket).returns({ file: getOrCreateFileMock(path, opts) });
 }
@@ -57,7 +56,6 @@ function written(path) {
 
 function reset() {
   bucketStub = null;
-  fileStub = null;
   mocks = {};
   writes = {};
   readable = {};

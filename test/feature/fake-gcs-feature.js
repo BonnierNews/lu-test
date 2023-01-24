@@ -9,13 +9,15 @@ const config = require("exp-config");
 const fakeGcs = require("../helpers/fake-gcs");
 const pipeline = promisify(stream.pipeline);
 
+const filePath = "gs://some-bucket/dir/file.txt";
+
 Feature("fake-gcs feature", () => {
   beforeEachScenario(fakeGcs.reset);
   Scenario("Write a file to google", () => {
-    const filePath = "gs://some-bucket/dir/file.txt";
     Given("there's a target we can write to", () => {
       fakeGcs.mockFile(filePath);
     });
+
     When("we write the file", async () => {
       const storage = new Storage(config.gcs.credentials);
       const writeStream = storage.bucket("some-bucket").file("dir/file.txt").createWriteStream();
@@ -25,6 +27,7 @@ Feature("fake-gcs feature", () => {
       readStream.push(null);
       await pipeline(readStream, writeStream);
     });
+
     Then("we should have cached a written file", () => {
       fakeGcs.written(filePath).should.eql("some text\n");
     });
@@ -33,10 +36,12 @@ Feature("fake-gcs feature", () => {
   Scenario("Write multiple files to google", () => {
     const filePath1 = "gs://some-bucket/dir/file_1.txt";
     const filePath2 = "gs://some-bucket/dir/file_2.txt";
+
     Given("there's two targets we can write to", () => {
       fakeGcs.mockFile(filePath1);
       fakeGcs.mockFile(filePath2);
     });
+
     When("we write to file1's path", async () => {
       const storage = new Storage(config.gcs.credentials);
       const fileOne = storage.bucket("some-bucket").file("dir/file_1.txt").createWriteStream();
@@ -67,6 +72,7 @@ Feature("fake-gcs feature", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "some stuff\n" });
       fakeGcs.mockFile("gs://some-bucket/dir/file_2.txt", { content: "some other stuff\n" });
     });
+
     const readOne = [];
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
@@ -100,10 +106,10 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("Check if a file exists on google with readable data", () => {
-    const filePath = "gs://some-bucket/dir/file.txt";
     Given("there's a mocked file with readable data", () => {
       fakeGcs.mockFile(filePath, { content: "blahoga\n" });
     });
+
     let exists;
     When("we ask if the file exists", () => {
       const storage = new Storage(config.gcs.credentials);
@@ -116,10 +122,10 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("Check if a file exists on google without readable data", () => {
-    const filePath = "gs://some-bucket/dir/file.txt";
     Given("there's a mocked file without readable data", () => {
       fakeGcs.mockFile(filePath);
     });
+
     let exists;
     When("we ask if the file exists", () => {
       const storage = new Storage(config.gcs.credentials);
@@ -132,10 +138,10 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("Ask for a list of files with a prefix", () => {
-    const filePath = "gs://some-bucket/dir/file.txt";
     Given("there's a mocked file", () => {
       fakeGcs.mockFile(filePath);
     });
+
     let files;
     When("we ask ask for a list of files", () => {
       const storage = new Storage(config.gcs.credentials);
@@ -148,10 +154,10 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("Mock the same file twice", () => {
-    const filePath = "gs://some-bucket/dir/file.txt";
     When("there's a mock", () => {
       fakeGcs.mockFile(filePath);
     });
+
     Then("when we try to mock the file again, it throws an error", () => {
       assert.throws(() => fakeGcs.mockFile(filePath), /has already been mocked/);
     });

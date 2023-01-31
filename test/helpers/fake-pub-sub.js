@@ -1,7 +1,7 @@
 "use strict";
 
 const sinon = require("sinon");
-const { PubSub } = require("@google-cloud/storage");
+const { PubSub } = require("@google-cloud/pubsub");
 const request = require("supertest");
 const config = require("exp-config");
 

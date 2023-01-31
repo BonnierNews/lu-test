@@ -1,7 +1,7 @@
 "use strict";
 
 const sinon = require("sinon");
-const { CloudTasksClient } = require("@google-cloud/storage");
+const { CloudTasksClient } = require("@google-cloud/tasks");
 const request = require("supertest");
 
 const sandbox = sinon.createSandbox();

@@ -1,6 +1,6 @@
 import { createSandbox } from "sinon";
 import { CloudTasksClient } from "@google-cloud/tasks";
-import * as request from "supertest";
+import request from "supertest";
 
 const sandbox = createSandbox();
 

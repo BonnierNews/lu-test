@@ -1,9 +1,7 @@
-"use strict";
+import { createSandbox } from "sinon";
+import GoogleAuth from "google-auth-library";
 
-const sinon = require("sinon");
-const GoogleAuth = require("google-auth-library");
-
-const sandbox = sinon.createSandbox();
+const sandbox = createSandbox();
 
 let stub;
 
@@ -13,7 +11,7 @@ function init() {
   }
 }
 
-function enableGetRequestHeaders() {
+export function enableGetRequestHeaders() {
   init();
   stub.getIdTokenClient = () => {
     return {
@@ -24,12 +22,7 @@ function enableGetRequestHeaders() {
   };
 }
 
-function reset() {
+export function reset() {
   sandbox.restore();
   stub = null;
 }
-
-module.exports = {
-  enableGetRequestHeaders,
-  reset,
-};

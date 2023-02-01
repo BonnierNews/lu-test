@@ -16,6 +16,7 @@
     "coverage": "nyc npm test",
     "check-coverage": "nyc check-coverage"
   },
+  "type": "module",
   "keywords": [],
   "author": "",
   "license": "MIT",

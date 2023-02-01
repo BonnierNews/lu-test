@@ -1,6 +1,4 @@
-"use strict";
-
-function parsedPDF(pdfJSON) {
+export function parsedPDF(pdfJSON) {
   const dateRegex = /(([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))%20([01]\d|2[0-3])%3A[0-5]\d%3A[0-5]\d)/g;
   let i = 1;
   return pdfJSON.Pages.map((page) => {
@@ -20,5 +18,3 @@ function parsedPDF(pdfJSON) {
     };
   });
 }
-
-module.exports = { parsedPDF };

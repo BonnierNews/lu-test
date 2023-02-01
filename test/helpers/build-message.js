@@ -1,7 +1,3 @@
-"use strict";
-
-function buildMessage(message, data = []) {
+export default function buildMessage(message, data = []) {
   return { ...message, data: [ ...(message.data || []), ...data ] };
 }
-
-module.exports = buildMessage;

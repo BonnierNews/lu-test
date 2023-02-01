@@ -1,7 +1,6 @@
-"use strict";
+import { expect } from "chai";
 
-const common = require("../../index");
-const expect = require("chai").expect;
+import helpers from "../../index.js";
 
 const expectedExports = [
   "fakeApi",
@@ -13,27 +12,20 @@ const expectedExports = [
   "messageHelper",
   "pdfReader",
   "requestHelper",
-  "assertHelpers",
+  "assertRejected",
+  "assertRetry",
   "buildMessage",
   "fakeCloudTask",
   "fakeGcpAuth",
   "fakePubSub",
-  "run",
+  "runSequence",
   "initFakeApi",
 ];
 
 describe("Exposed features", () => {
-  const exports = [];
-
-  for (const c in common) {
-    exports.push(c.toString());
-  }
-
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      const list = exports.join(",");
-      const expectedList = expectedExports.join(",");
-      expect(list).to.equal(expectedList);
+      expect(Object.keys(helpers).join(",")).to.equal(expectedExports.join(","));
     });
   });
 });

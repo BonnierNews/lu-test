@@ -1,11 +1,9 @@
-"use strict";
+import { createSandbox } from "sinon";
+import { PubSub } from "@google-cloud/pubsub";
+import request from "supertest";
+import config from "exp-config";
 
-const sinon = require("sinon");
-const { PubSub } = require("@google-cloud/pubsub");
-const request = require("supertest");
-const config = require("exp-config");
-
-const sandbox = sinon.createSandbox();
+const sandbox = createSandbox();
 
 let stub;
 let messages = [];
@@ -17,7 +15,7 @@ function init() {
   }
 }
 
-function enablePublish(broker) {
+export function enablePublish(broker) {
   init();
   stub.topic = (topic) => {
     return {
@@ -37,7 +35,7 @@ function enablePublish(broker) {
   };
 }
 
-async function triggerMessage(broker, messageData, attributes) {
+export async function triggerMessage(broker, messageData, attributes) {
   return await publish(broker, messageData, attributes);
 }
 
@@ -55,21 +53,16 @@ async function publish(app, messageData, attributes) {
   return await request(app).post("/message").send(message);
 }
 
-function reset() {
+export function reset() {
   messages = [];
   messageHandlerResponses = [];
   sandbox.restore();
   stub = null;
 }
 
-module.exports = {
-  enablePublish,
-  reset,
-  recordedMessages: () => {
-    return messages;
-  },
-  recordedMessageHandlerResponses: () => {
-    return messageHandlerResponses;
-  },
-  triggerMessage,
-};
+export function recordedMessages() {
+  return messages;
+}
+export function recordedMessageHandlerResponses() {
+  return messageHandlerResponses;
+}

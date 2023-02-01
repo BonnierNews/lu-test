@@ -1,22 +1,20 @@
-"use strict";
+import fakeApi from "./test/helpers/fake-api.js";
+import * as fakeFtp from "./test/helpers/fake-ftp.js";
+import * as fakeGcs from "./test/helpers/fake-gcs.js";
+import * as fakeSftp from "./test/helpers/fake-sftp.js";
+import * as fakeCloudTask from "./test/helpers/fake-cloud-task.js";
+import * as fakeGcpAuth from "./test/helpers/fake-gcp-auth.js";
+import * as fakePubSub from "./test/helpers/fake-pub-sub.js";
+import * as fileUtils from "./test/helpers/file-utils.js";
+import * as messageHelper from "./test/helpers/message-helper.js";
+import * as pdfReader from "./test/helpers/pdfReader.js";
+import clone from "./test/helpers/clone.js";
+import { assertRejected, assertRetry } from "./test/helpers/assert-helpers.js";
+import buildMessage from "./test/helpers/build-message.js";
+import * as requestHelper from "./test/helpers/request-helper.js";
+import runSequence from "./test/helpers/run-sequence.js";
 
-const fakeApi = require("./test/helpers/fake-api");
-const fakeFtp = require("./test/helpers/fake-ftp");
-const fakeGcs = require("./test/helpers/fake-gcs");
-const fakeSftp = require("./test/helpers/fake-sftp");
-const fileUtils = require("./test/helpers/file-utils");
-const messageHelper = require("./test/helpers/message-helper");
-const pdfReader = require("./test/helpers/pdfReader");
-const clone = require("./test/helpers/clone");
-const assertHelpers = require("./test/helpers/assert-helpers");
-const buildMessage = require("./test/helpers/build-message");
-const fakeCloudTask = require("./test/helpers/fake-cloud-task");
-const fakeGcpAuth = require("./test/helpers/fake-gcp-auth");
-const fakePubSub = require("./test/helpers/fake-pub-sub");
-const requestHelper = require("./test/helpers/request-helper");
-const run = require("./test/helpers/run");
-
-module.exports = {
+export default {
   fakeApi: fakeApi(),
   fakeFtp,
   fakeGcs,
@@ -26,11 +24,12 @@ module.exports = {
   messageHelper,
   pdfReader,
   requestHelper,
-  assertHelpers,
+  assertRejected,
+  assertRetry,
   buildMessage,
   fakeCloudTask,
   fakeGcpAuth,
   fakePubSub,
-  run,
+  runSequence,
   initFakeApi: fakeApi,
 };

@@ -1,6 +1,10 @@
-"use strict";
-
 // Make sure dates are displayed in the correct timezone
+// Setup common test libraries
+import "mocha-cakes-2";
+
+import chai from "chai";
+import chaiExclude from "chai-exclude";
+
 process.env.TZ = "Europe/Stockholm";
 
 // Tests should always run in test environment to prevent accidental deletion of
@@ -8,11 +12,6 @@ process.env.TZ = "Europe/Stockholm";
 // This file is required with ./test/mocha.opts
 process.env.NODE_ENV = "test";
 
-// Setup common test libraries
-require("mocha-cakes-2");
-
-const chai = require("chai");
-const chaiExclude = require("chai-exclude");
 chai.use(chaiExclude);
 
 chai.config.truncateThreshold = 0;

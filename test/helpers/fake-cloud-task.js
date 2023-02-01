@@ -1,10 +1,8 @@
-"use strict";
+import { createSandbox } from "sinon";
+import { CloudTasksClient } from "@google-cloud/tasks";
+import * as request from "supertest";
 
-const sinon = require("sinon");
-const { CloudTasksClient } = require("@google-cloud/tasks");
-const request = require("supertest");
-
-const sandbox = sinon.createSandbox();
+const sandbox = createSandbox();
 
 let stub;
 let messages = [];
@@ -16,7 +14,7 @@ function init() {
   }
 }
 
-function enablePublish(broker) {
+export function enablePublish(broker) {
   init();
   stub.queuePath = () => "fix-me";
   stub.createTask = async ({ task }) => {
@@ -32,7 +30,7 @@ function enablePublish(broker) {
   };
 }
 
-function fakeCreateTaskError() {
+export function fakeCreateTaskError() {
   init();
   stub.queuePath = () => "fix-me";
   stub.createTask = () => {
@@ -40,21 +38,16 @@ function fakeCreateTaskError() {
   };
 }
 
-function reset() {
+export function reset() {
   messages = [];
   messageHandlerResponses = [];
   sandbox.restore();
   stub = null;
 }
 
-module.exports = {
-  enablePublish,
-  reset,
-  recordedMessages: () => {
-    return messages;
-  },
-  recordedMessageHandlerResponses: () => {
-    return messageHandlerResponses;
-  },
-  fakeCreateTaskError,
-};
+export function recordedMessages() {
+  return messages;
+}
+export function recordedMessageHandlerResponses() {
+  return messageHandlerResponses;
+}

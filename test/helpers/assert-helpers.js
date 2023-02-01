@@ -1,7 +1,6 @@
-"use strict";
-const chai = require("chai");
+import chai from "chai";
 
-async function assertRejected(fn) {
+export async function assertRejected(fn) {
   try {
     await fn();
   } catch (error) {
@@ -12,7 +11,7 @@ async function assertRejected(fn) {
   throw new chai.AssertionError("not rejected");
 }
 
-async function assertRetry(fn) {
+export async function assertRetry(fn) {
   try {
     await fn();
   } catch (error) {
@@ -21,5 +20,3 @@ async function assertRetry(fn) {
   }
   throw new chai.AssertionError("not retried");
 }
-
-module.exports = { assertRejected, assertRetry };

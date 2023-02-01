@@ -1,12 +1,11 @@
-"use strict";
-
-const es = require("event-stream");
-const ftp = require("basic-ftp");
-const sandbox = require("sinon").createSandbox();
-const assert = require("assert");
+import es from "event-stream";
+import ftp from "basic-ftp";
+import { createSandbox } from "sinon";
+import assert from "assert";
 
 let writes = {};
 let stub;
+const sandbox = createSandbox();
 
 function init() {
   if (!stub) {
@@ -14,7 +13,7 @@ function init() {
   }
 }
 
-function put(expectedTargetPath) {
+export function put(expectedTargetPath) {
   init();
   stub.access = () => {
     return;
@@ -31,7 +30,7 @@ function put(expectedTargetPath) {
   };
 }
 
-function putMany(expectedTargetPaths) {
+export function putMany(expectedTargetPaths) {
   init();
   stub.access = () => {
     return;
@@ -51,7 +50,7 @@ function putMany(expectedTargetPaths) {
   };
 }
 
-function putError(message = "ftp put failed") {
+export function putError(message = "ftp put failed") {
   init();
   stub.access = () => {
     return;
@@ -61,31 +60,22 @@ function putError(message = "ftp put failed") {
   };
 }
 
-function connectionError(message = "ftp connection failed") {
+export function connectionError(message = "ftp connection failed") {
   init();
   stub.access = () => {
     throw new Error(message);
   };
 }
 
-function written(path) {
+export function written(path) {
   if (Buffer.isBuffer(writes[path])) {
     return writes[path].toString();
   }
   return writes[path];
 }
 
-function reset() {
+export function reset() {
   writes = {};
   sandbox.restore();
   stub = null;
 }
-
-module.exports = {
-  connectionError,
-  written,
-  reset,
-  put,
-  putMany,
-  putError,
-};

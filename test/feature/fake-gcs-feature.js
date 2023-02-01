@@ -1,12 +1,11 @@
-"use strict";
+import { Storage } from "@google-cloud/storage";
+import stream from "stream";
+import { promisify } from "util";
+import assert from "assert";
+import config from "exp-config";
 
-const { Storage } = require("@google-cloud/storage");
-const stream = require("stream");
-const { promisify } = require("util");
-const assert = require("assert");
+import * as fakeGcs from "../helpers/fake-gcs.js";
 
-const config = require("exp-config");
-const fakeGcs = require("../helpers/fake-gcs");
 const pipeline = promisify(stream.pipeline);
 
 const filePath = "gs://some-bucket/dir/file.txt";

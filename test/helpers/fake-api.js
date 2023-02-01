@@ -1,11 +1,9 @@
-"use strict";
+import nock from "nock";
+import config from "exp-config";
+import stream from "stream";
+import zlib from "zlib";
 
-const nock = require("nock");
-const config = require("exp-config");
-const stream = require("stream");
-const zlib = require("zlib");
-
-function init(url = config.proxyUrl) {
+export default function init(url = config.proxyUrl) {
   let api = nock(url);
 
   function reset() {
@@ -126,5 +124,3 @@ function init(url = config.proxyUrl) {
     mountExternal,
   };
 }
-
-module.exports = init;

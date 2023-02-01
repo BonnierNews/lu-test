@@ -1,14 +1,13 @@
-"use strict";
-
-const { Writable, Readable } = require("stream");
-const { Storage } = require("@google-cloud/storage");
-const sandbox = require("sinon").createSandbox();
-const config = require("exp-config");
+import { Writable, Readable } from "stream";
+import { Storage } from "@google-cloud/storage";
+import { createSandbox } from "sinon";
+import config from "exp-config";
 
 let writes = {}, mocks = {}, readable = {};
 let bucketStub;
+const sandbox = createSandbox();
 
-function mockFile(path, opts = { content: "" }) {
+export function mockFile(path, opts = { content: "" }) {
   const { Bucket: bucket } = parseUri(path);
   if (!bucketStub) bucketStub = sandbox.stub(Storage.prototype, "bucket");
 
@@ -49,12 +48,12 @@ function getWriter(key) {
   };
 }
 
-function written(path) {
+export function written(path) {
   const { Key } = parseUri(path);
   return writes[Key];
 }
 
-function reset() {
+export function reset() {
   bucketStub = null;
   mocks = {};
   writes = {};
@@ -73,9 +72,3 @@ function parseUri(uri) {
     return conf;
   }
 }
-
-module.exports = {
-  mockFile,
-  reset,
-  written,
-};

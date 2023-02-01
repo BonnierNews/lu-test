@@ -1,16 +1,16 @@
-"use strict";
-
-const es = require("event-stream");
-const SftpClient = require("ssh2-sftp-client");
-const sandbox = require("sinon").createSandbox();
-const { Readable } = require("stream");
-const assert = require("assert");
+import es from "event-stream";
+import SftpClient from "ssh2-sftp-client";
+import { createSandbox } from "sinon";
+import { Readable } from "stream";
+import assert from "assert";
 
 let writes = {};
 let removes = {};
 let stub, targetPath;
 const mockedPaths = {};
 let expectedExistPaths = {};
+
+const sandbox = createSandbox();
 
 function init() {
   if (!stub) {
@@ -33,7 +33,7 @@ function get(expectedPath, content) {
   };
 }
 
-function getAsStream(expectedPath, content) {
+export function getAsStream(expectedPath, content) {
   init();
   stub.connect = () => {
     return;
@@ -61,7 +61,7 @@ function getMany(expectedFiles) {
   };
 }
 
-function getManyAsStream(expectedFiles) {
+export function getManyAsStream(expectedFiles) {
   init();
   stub.connect = () => {
     return;
@@ -69,7 +69,7 @@ function getManyAsStream(expectedFiles) {
   getMany(expectedFiles);
 }
 
-function copy(expectedSourcePath, expectedTargetPath, content) {
+export function copy(expectedSourcePath, expectedTargetPath, content) {
   init();
   assert(content, "No content supplied");
 
@@ -86,7 +86,7 @@ function copy(expectedSourcePath, expectedTargetPath, content) {
   };
 }
 
-function put(expectedTargetPath) {
+export function put(expectedTargetPath) {
   init();
   stub.connect = () => {
     return;
@@ -106,7 +106,7 @@ function put(expectedTargetPath) {
   };
 }
 
-function putMany(expectedTargetPaths) {
+export function putMany(expectedTargetPaths) {
   init();
   stub.connect = () => {
     return;
@@ -126,7 +126,7 @@ function putMany(expectedTargetPaths) {
   };
 }
 
-function putError(message = "sftp put failed") {
+export function putError(message = "sftp put failed") {
   init();
   stub.connect = () => {
     return;
@@ -136,7 +136,7 @@ function putError(message = "sftp put failed") {
   };
 }
 
-function list(expectedPath, expectedPattern, files) {
+export function list(expectedPath, expectedPattern, files) {
   if (expectedPattern) {
     assert(
       !expectedPattern.includes("/"),
@@ -171,7 +171,7 @@ function list(expectedPath, expectedPattern, files) {
   };
 }
 
-function listMany(expectedPaths) {
+export function listMany(expectedPaths) {
   init();
   stub.connect = () => {
     return;
@@ -213,7 +213,7 @@ function listMany(expectedPaths) {
   };
 }
 
-function remove(expectedPath) {
+export function remove(expectedPath) {
   init();
   stub.connect = () => {
     return;
@@ -230,32 +230,32 @@ function remove(expectedPath) {
   };
 }
 
-function connectionError(message = "sftp connection failed") {
+export function connectionError(message = "sftp connection failed") {
   init();
   stub.connect = () => {
     throw new Error(message);
   };
 }
 
-function written(path) {
+export function written(path) {
   if (Buffer.isBuffer(writes[path])) {
     return writes[path].toString();
   }
   return writes[path];
 }
 
-function writtenAsBuffer(path) {
+export function writtenAsBuffer(path) {
   if (Buffer.isBuffer(writes[path])) {
     return writes[path];
   }
   return Buffer.from(writes[path]);
 }
 
-function removed(path) {
+export function removed(path) {
   return removes[path];
 }
 
-function reset() {
+export function reset() {
   writes = {};
   removes = {};
   sandbox.restore();
@@ -263,7 +263,7 @@ function reset() {
   expectedExistPaths = {};
 }
 
-function exists(expectedPath, fileExists) {
+export function exists(expectedPath, fileExists) {
   expectedExistPaths[expectedPath] = fileExists;
   init();
   stub.connect = () => {
@@ -277,25 +277,6 @@ function exists(expectedPath, fileExists) {
   };
 }
 
-function getTargetPath() {
+export function getTargetPath() {
   return targetPath;
 }
-
-module.exports = {
-  copy,
-  getAsStream,
-  getManyAsStream,
-  getTargetPath,
-  connectionError,
-  written,
-  writtenAsBuffer,
-  remove,
-  removed,
-  reset,
-  put,
-  putMany,
-  putError,
-  list,
-  listMany,
-  exists,
-};

@@ -24,7 +24,7 @@ Feature("assert-helpers feature", () => {
     When("asserting a rejected function", async () => {
       response = await assertRejected(rejectedError);
     });
-    Then("we should have received the error message ", () => {
+    Then("we should have received the error message", () => {
       response.message.should.eql("some error");
     });
   });
@@ -48,7 +48,7 @@ Feature("assert-helpers feature", () => {
     When("asserting a retried function", async () => {
       response = await assertRetry(retriedError);
     });
-    Then("we should have received the error message ", () => {
+    Then("we should have received the error message", () => {
       response.message.should.eql("some error");
     });
   });

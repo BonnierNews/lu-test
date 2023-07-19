@@ -3,6 +3,8 @@ import config from "exp-config";
 import stream from "stream";
 import zlib from "zlib";
 
+import clone from "./clone.js";
+
 export default function init(url = config.proxyUrl) {
   let api = nock(url);
 
@@ -85,10 +87,6 @@ export default function init(url = config.proxyUrl) {
 
   function fakeResources() {
     Array.prototype.forEach.call(arguments, fakeResource);
-  }
-
-  function clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
   }
 
   function mountExternal(external) {

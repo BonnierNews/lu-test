@@ -47,6 +47,7 @@ const basePost = {
   statusCode: 200,
   body: { ...content },
 };
+
 Feature("fake-api net connect feature", () => {
   beforeEachScenario(fakeApi.reset);
 

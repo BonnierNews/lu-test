@@ -38,20 +38,20 @@ describe("Exposed features", () => {
 });
 
 Feature("fake-api feature", () => {
-  Scenario("successfully disable net connect", () => {
+  Scenario("successfully diable net connect", () => {
     Given("net connect is disabled", () => {
       fakeApi.disableNetConnect();
     });
     let response;
-    When("trying to get a url", () => {
+    When("trying to get an url", async () => {
       try {
-        axios.get("http://example.com");
+        await axios.get("http://example.com");
       } catch (error) {
         response = error;
       }
     });
-    Then("nock should say that we have no mock", () => {
-      response.should.eql("broken");
+    Then("nock should say that net connect is disallowed", () => {
+      response.message.should.eql('Nock: Disallowed net connect for "example.com:80/"');
     });
   });
 });

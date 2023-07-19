@@ -27,13 +27,16 @@ export default function init(url = config.proxyUrl) {
     }
     let actualBody;
     const { request } = testData;
-    if (request.baseUrl && request.baseUrl !== url) throw new Error(`Missmatching urls ${request.baseUrl} ${url}`);
+    if (request.baseUrl && request.baseUrl !== url) {
+      throw new Error(`Mismatching urls ${request.baseUrl} ${url}`);
+    }
     const mock = api[request.method.toLowerCase()](request.path, (body) => {
       actualBody = body;
       return true;
     });
 
-    if (times || testData.times) mock.times(times || testData.times);
+    const numTimes = times || testData.times;
+    if (numTimes) mock.times(numTimes);
 
     if (request.query) {
       mock.query(request.query);
@@ -47,9 +50,23 @@ export default function init(url = config.proxyUrl) {
 
     const statusCode = testData.statusCode ?? testData.status ?? 200;
     if (testData.stream && testData.compress) {
-      mock.reply(statusCode, stream.Readable.from([ testData.body ]).pipe(zlib.createGzip()));
+      const body =
+        typeof testData.body === "object"
+          ? JSON.stringify(testData.body)
+          : testData.body;
+      mock.reply(
+        statusCode,
+        stream.Readable.from([ body ]).pipe(zlib.createGzip())
+      );
     } else if (testData.stream) {
-      mock.reply(statusCode, stream.Readable.from([ testData.body ]), testData.headers);
+      const body =
+        typeof testData.body === "object"
+          ? JSON.stringify(testData.body)
+          : testData.body;
+      mock.reply(statusCode, stream.Readable.from([ body ]), {
+        "content-length": body.length,
+        ...testData.headers,
+      });
     } else {
       mock.reply(statusCode, testData.body, testData.headers || undefined);
     }
@@ -69,7 +86,11 @@ export default function init(url = config.proxyUrl) {
   }
 
   function fakePrefixedResource(prefix, content, times = 1) {
-    return fakeJsonResponse(`${prefix}/${content.type}/${content.id}`, content, times);
+    return fakeJsonResponse(
+      `${prefix}/${content.type}/${content.id}`,
+      content,
+      times
+    );
   }
 
   function fakeJsonResponse(apiPath, content, times = 1, status = 200) {
@@ -91,7 +112,9 @@ export default function init(url = config.proxyUrl) {
 
   function mountExternal(external) {
     if (!external) {
-      throw new Error("Could not mount, provided object is empty or missing external property");
+      throw new Error(
+        "Could not mount, provided object is empty or missing external property"
+      );
     }
 
     const mounts = Object.values(external).map((value) => {

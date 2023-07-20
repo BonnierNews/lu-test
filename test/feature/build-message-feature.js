@@ -1,22 +1,24 @@
 import buildMessage from "../helpers/build-message.js";
 
+const message = { id: "some-id" };
+const data = [ { some: "data" } ];
 const expectedMessage = { id: "some-id", data: [ { some: "data" } ] };
 
 Feature("build-message feature", () => {
-  Scenario("successfully build a message with data", () => {
+  Scenario("successfully build a message with separate data", () => {
     let response;
-    When("building a message with data", async () => {
-      response = await buildMessage(expectedMessage);
+    When("building a message with separate data", async () => {
+      response = await buildMessage(message, data);
     });
     Then("we should have received the message", () => {
       response.should.eql(expectedMessage);
     });
   });
 
-  Scenario("successfully build a message with separate data", () => {
+  Scenario("successfully build a message with data", () => {
     let response;
-    When("building a message with separate data", async () => {
-      response = await buildMessage({ id: "some-id" }, [ { some: "data" } ]);
+    When("building a message with data", async () => {
+      response = await buildMessage({ ...message, data });
     });
     Then("we should have received the message", () => {
       response.should.eql(expectedMessage);
@@ -26,7 +28,7 @@ Feature("build-message feature", () => {
   Scenario("successfully build a message without data", () => {
     let response;
     When("building a message with separate data", async () => {
-      response = await buildMessage({ id: "some-id" });
+      response = await buildMessage(message);
     });
     Then("we should have received the message with empty data", () => {
       response.should.eql({ ...expectedMessage, data: [] });

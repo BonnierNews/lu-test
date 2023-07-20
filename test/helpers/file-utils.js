@@ -13,6 +13,10 @@ export function objectArrayToJsonLines(content) {
 
 export function csvToJsonLines(str) {
   if (!str) return;
-  const objectArray = parse(str, { delimiter: ",", columns: true, relax_column_count: true }); // eslint-disable-line camelcase
+  const objectArray = parse(str, {
+    delimiter: ",",
+    columns: true,
+    relax_column_count: true,
+  }); // eslint-disable-line camelcase
   return objectArrayToJsonLines(objectArray);
 }

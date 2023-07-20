@@ -1,30 +1,34 @@
 import runSequence from "../helpers/run-sequence.js";
+import { app } from "../utils/broker.js";
 
-const app = {};
 const message = {
   id: "some-guid",
   type: "something",
   attributes: { name: "Someone" },
-  meta: {
-    createdAt: "2017-09-24T00:00:00.000Z",
-    updatedAt: "2017-09-24T00:00:00.000Z",
-    correlationId: "some-corrId",
-  },
+  meta: {},
 };
 
-// TODO: build this once fake-pub-sub-feature is working
-Feature.skip("run-sequence feature", () => {
+Feature("run-sequence feature", () => {
   Scenario("successfully run a sequence", () => {
     let response;
     When("running the sequence", async () => {
-      response = await runSequence(
-        app,
-        "trigger.sequence.some-sequence",
-        message
-      );
+      response = await runSequence(app, "sequence.some-sequence", message);
     });
-    Then("we should should have some message data", () => {
-      response.should.eql("object");
+    Then("we should should have a processed sequence", () => {
+      response.should.eql({
+        topic: "some-topic",
+        message: {
+          id: "some-guid",
+          type: "something",
+          attributes: { name: "Someone" },
+          meta: {},
+          data: [
+            { type: "step1", id: "some-id" },
+            { type: "step2", id: "some-other-id" },
+          ],
+        },
+        attributes: { key: "sequence.some-sequence.processed" },
+      });
     });
   });
 });

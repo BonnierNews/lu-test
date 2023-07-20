@@ -29,7 +29,7 @@ const expectedExports = [
   "mountExternal",
 ];
 
-describe("Exposed features", () => {
+describe("fake-api exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
       expect(Object.keys(fakeApi).sort().join(",")).to.equal(

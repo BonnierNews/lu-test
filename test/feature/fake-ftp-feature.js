@@ -13,7 +13,7 @@ const expectedExports = [
   "written",
 ];
 
-describe("Exposed features", () => {
+describe("fake-pub-sub exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
       expect(Object.keys(fakeFTP).sort().join(",")).to.equal(

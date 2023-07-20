@@ -5,7 +5,7 @@
   "ui": "mocha-cakes-2",
   "exit": true,
   "require": [
-    "./test/helpers/setup.js"
+    "./test/setup.js"
   ]
 }
 

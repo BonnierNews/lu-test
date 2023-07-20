@@ -4,7 +4,7 @@
   ],
   "exclude": [
     "test/feature",
-    "test/helpers/setup.js"
+    "test/setup.js"
   ],
   "all": true,
   "statements": "100",

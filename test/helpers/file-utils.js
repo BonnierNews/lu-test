@@ -1,4 +1,4 @@
-import { parse } from "csv-parse";
+import { parse } from "csv-parse/sync"; // eslint-disable-line import/no-unresolved
 
 export function jsonLinesToObjectArray(content) {
   return content

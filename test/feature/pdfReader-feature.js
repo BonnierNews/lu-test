@@ -1,26 +1,7 @@
-import { readFileSync } from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
 import { parsedPDF } from "../helpers/pdfReader.js";
 import clone from "../helpers/clone.js";
-
-const pdfAsJson = JSON.parse(
-  readFileSync(
-    path.join(
-      path.dirname(fileURLToPath(import.meta.url)),
-      "/../data/pdf-as-json.json"
-    )
-  ).toString()
-);
-const parsedJson = JSON.parse(
-  readFileSync(
-    path.join(
-      path.dirname(fileURLToPath(import.meta.url)),
-      "/../data/parsed-pdf.json"
-    )
-  ).toString()
-);
+import pdfAsJson from "../data/pdf-as-json.js";
+import parsedJson from "../data/parsed-pdf.js";
 
 Feature("pdfReader feature", () => {
   Scenario("successfully parse a pdf in JSON format", () => {

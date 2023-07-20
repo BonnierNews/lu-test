@@ -46,9 +46,10 @@
     "eslint-config-exp": "^0.5.0",
     "prettier": "^2.1.1"
   },
-  "directories": {
-    "test": "test"
-  },
+  "files": [
+    "index.js",
+    "test/helpers/*.js"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BonnierNews/lu-test.git"

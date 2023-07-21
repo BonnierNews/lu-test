@@ -31,4 +31,18 @@ Feature("run-sequence feature", () => {
       });
     });
   });
+
+  Scenario("sequence doesn't complete successfully", () => {
+    let response;
+    When("running the sequence", async () => {
+      try {
+        await runSequence(app, "sequence.broken-sequence", message);
+      } catch (error) {
+        response = error;
+      }
+    });
+    Then("we should should have a processed sequence", () => {
+      response.message.should.eql("Sequence not processed, see log");
+    });
+  });
 });

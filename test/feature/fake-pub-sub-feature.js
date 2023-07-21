@@ -22,7 +22,10 @@ describe("Exposed features", () => {
   });
 });
 
-const message = { json: {}, attributes: { key: "trigger.some-trigger" } };
+const message = {
+  json: {},
+  attributes: { key: "sequence.some-sequence.perform.something-else" },
+};
 
 Feature("fake-pub-sub feature", () => {
   beforeEachScenario(fakePubSub.reset);
@@ -43,22 +46,28 @@ Feature("fake-pub-sub feature", () => {
     Then("we should have received a message id", () => {
       response.should.eql("some-message-id");
     });
-    And("we should have recorded the message", () => {
+    And("we should have recorded two messages", () => {
       fakePubSub.recordedMessages().should.eql([
         {
           topic: "some-topic",
           message: {},
-          attributes: { key: "trigger.some-trigger" },
+          attributes: { key: "sequence.some-sequence.perform.something-else" },
+        },
+        {
+          topic: "some-topic",
+          message: { data: [ { type: "step2", id: "some-other-id" } ] },
+          attributes: { key: "sequence.some-sequence.processed" },
         },
       ]);
     });
-    And("we should have recorded one message handler response", () => {
-      fakePubSub.recordedMessageHandlerResponses().length.should.eql(1);
+    And("we should have recorded two message handler responses", () => {
+      fakePubSub.recordedMessageHandlerResponses().length.should.eql(2);
     });
-    And("we should have recorded the message handler response", () => {
-      fakePubSub
-        .recordedMessageHandlerResponses()[0]
-        ._body.should.eql({ type: "triggered", id: "trigger-id" });
+    And("both messages should have been processed successfully", () => {
+      fakePubSub.recordedMessageHandlerResponses().forEach((m) => {
+        m.statusCode.should.eql(200, m.text);
+        m.body.should.eql({});
+      });
     });
   });
 
@@ -81,8 +90,8 @@ Feature("fake-pub-sub feature", () => {
     Then("we should receive a 200, Ok", () => {
       response.statusCode.should.eql(200, response.text);
     });
-    And("we should receive the trigger response", () => {
-      response.body.should.eql({ type: "triggered", id: "trigger-id" });
+    And("we should receive an empty body", () => {
+      response.body.should.eql({ });
     });
   });
 });

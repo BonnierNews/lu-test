@@ -1,11 +1,11 @@
+// This is a bare minimum broker implementation, doing just enough to be able to test the test-helpers
+// For a full, working broker implementation with pub/sub, see BonnierNews/b0rker
+// For a full, working broker implementation with rabbitMQ, see BonnierNews/lu-broker
 import express from "express";
 import expressPromiseRouter from "express-promise-router";
 import { PubSub } from "@google-cloud/pubsub";
 
-function initRecipes(recipes, triggers) {
-  const triggerKeys = Object.keys(triggers).concat(
-    recipes.map((r) => `trigger.${r.namespace}.${r.name}`)
-  );
+function initRecipes(recipes) {
   const recipeMap = {};
   const firstMap = {};
   const lambdaMap = {};
@@ -24,7 +24,9 @@ function initRecipes(recipes, triggers) {
       const [ next ] = recipe.sequence[idx + 1]
         ? Object.keys(recipe.sequence[idx + 1])
         : [ ".processed" ];
-      recipeMap[`${prefix}${key}`] = `${prefix}${next}`;
+      if (next !== ".processed" || recipe.name !== "broken-sequence") {
+        recipeMap[`${prefix}${key}`] = `${prefix}${next}`;
+      }
     });
 
     if (recipe.sequence[0]) {
@@ -47,8 +49,6 @@ function initRecipes(recipes, triggers) {
     handler: (routingKey) => {
       return lambdaMap[routingKey];
     },
-    triggerKeys: () => triggerKeys,
-    triggerHandler: (routingKey) => triggers[routingKey],
   };
 }
 
@@ -77,14 +77,10 @@ async function messageHandler(recipeMap, req, res) {
   const messageData = parseBody(req.body);
   const { key } = messageData.attributes;
   const { message } = messageData;
-  if (key.startsWith("trigger")) {
-    const handler = recipeMap.triggerHandler(key);
-    if (!handler) {
-      res.status(400).send(`Unknown trigger ${key}`);
-      return;
-    }
-    const result = await handler(message);
-    res.status(200).send(result);
+  const data = [ ...(message.data ?? []) ];
+
+  if (key.endsWith("processed")) {
+    res.status(200).send();
     return;
   }
   const handler = recipeMap.handler(key);
@@ -98,7 +94,7 @@ async function messageHandler(recipeMap, req, res) {
     const pubsub = new PubSub();
     const messagePublisher = await pubsub.topic("some-topic");
     await messagePublisher.publishMessage({
-      json: { ...message, data: [ ...(message.data ?? []) ] },
+      json: { ...message, data },
       attributes: { key: firstStep },
     });
     res.status(200).send();
@@ -106,7 +102,7 @@ async function messageHandler(recipeMap, req, res) {
   }
 
   const result = await handler(message);
-  const newData = [ ...message.data ];
+  const newData = [ ...data ];
   if (result) {
     if (Array.isArray(result)) {
       newData.push(...result);
@@ -147,11 +143,6 @@ function start({ recipes, triggers }) {
 }
 
 export const app = start({
-  triggers: {
-    "trigger.some-trigger": () => {
-      return { type: "triggered", id: "trigger-id" };
-    },
-  },
   recipes: [
     {
       namespace: "sequence",
@@ -162,6 +153,15 @@ export const app = start({
         }),
         route(".perform.something-else", () => {
           return { type: "step2", id: "some-other-id" };
+        }),
+      ],
+    },
+    {
+      namespace: "sequence",
+      name: "broken-sequence",
+      sequence: [
+        route(".perform.something", () => {
+          return { type: "step1", id: "some-id" };
         }),
       ],
     },

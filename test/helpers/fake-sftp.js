@@ -20,7 +20,10 @@ function init() {
 
 function get(expectedPath, content) {
   stub.get = (actualPath, writeStream) => {
-    assert(expectedPath === actualPath, `expected path ${expectedPath} but got ${actualPath}`);
+    assert(
+      expectedPath === actualPath,
+      `expected path ${expectedPath} but got ${actualPath}`
+    );
     if (!writeStream) {
       // if the is no witeStream return content as a buffer
       const buffer = Buffer.from(content);
@@ -42,15 +45,14 @@ export function getAsStream(expectedPath, content) {
 }
 
 function getMany(expectedFiles) {
-  init();
-  stub.connect = () => {
-    return;
-  };
   const expectedPaths = Object.keys(expectedFiles);
   stub.get = (actualPath, writeStream) => {
-    assert(expectedPaths.includes(actualPath), `expected paths ${expectedPaths.join(", ")} to include ${actualPath}`);
+    assert(
+      expectedPaths.includes(actualPath),
+      `expected paths ${expectedPaths.join(", ")} to include ${actualPath}`
+    );
     if (!writeStream) {
-      // if the is no writeStream return content as a buffer
+      // if there is no writeStream return content as a buffer
       const buffer = Buffer.from(expectedFiles[actualPath]);
       return new Promise((resolve) => {
         return resolve(buffer);
@@ -78,7 +80,10 @@ export function copy(expectedSourcePath, expectedTargetPath, content) {
   };
   get(expectedSourcePath, content);
   stub.put = (buffer, actualTarget) => {
-    assert(expectedTargetPath === actualTarget, `expected path ${expectedTargetPath} but got ${actualTarget}`);
+    assert(
+      expectedTargetPath === actualTarget,
+      `expected path ${expectedTargetPath} but got ${actualTarget}`
+    );
     return new Promise((resolve) => {
       writes[actualTarget] = buffer;
       return resolve();
@@ -94,7 +99,10 @@ export function put(expectedTargetPath) {
   stub.put = (readStream, actualTarget) => {
     targetPath = actualTarget;
     if (expectedTargetPath) {
-      assert(expectedTargetPath === actualTarget, `expected path ${expectedTargetPath} but got ${actualTarget}`);
+      assert(
+        expectedTargetPath === actualTarget,
+        `expected path ${expectedTargetPath} but got ${actualTarget}`
+      );
     }
     return new Promise((resolve) => {
       const writer = es.wait((_, data) => {
@@ -114,7 +122,9 @@ export function putMany(expectedTargetPaths) {
   stub.put = (readStream, actualTarget) => {
     assert(
       expectedTargetPaths.includes(actualTarget),
-      `expected paths ${expectedTargetPaths.join(", ")} to include ${actualTarget}`
+      `expected paths ${expectedTargetPaths.join(
+        ", "
+      )} to include ${actualTarget}`
     );
     return new Promise((resolve) => {
       const writer = es.wait((_, data) => {
@@ -138,8 +148,13 @@ export function putError(message = "sftp put failed") {
 
 export function list(expectedPath, expectedPattern, files) {
   if (expectedPattern) {
+    const expectedPatternIncludesSlash = (
+      expectedPattern.constructor.name === "RegExp"
+        ? expectedPattern.source
+        : expectedPattern
+    ).includes("/");
     assert(
-      !expectedPattern.includes("/"),
+      !expectedPatternIncludesSlash,
       `expected pattern ${expectedPattern} includes a '/', but that isn't supported by the real sftp client`
     );
   }
@@ -148,22 +163,21 @@ export function list(expectedPath, expectedPattern, files) {
     return;
   };
   stub.list = (actualPath, actualPattern) => {
-    assert(expectedPath === actualPath, `expected path ${expectedPath} but got ${actualPath}`);
+    assert(
+      expectedPath === actualPath,
+      `expected path ${expectedPath} but got ${actualPath}`
+    );
     if (actualPattern.constructor.name === "RegExp") {
       assert(
-        !actualPattern.source.includes("/"),
-        `actual pattern ${actualPattern.source} includes a '/', but that isn't supported by the real sftp client`
-      );
-      assert(
-        expectedPattern.constructor.name === "RegExp" && expectedPattern.source === actualPattern.source,
+        expectedPattern.constructor.name === "RegExp" &&
+          expectedPattern.source === actualPattern.source,
         `expected pattern ${expectedPattern} but got ${actualPattern}`
       );
     } else {
       assert(
-        !actualPattern.includes("/"),
-        `actual pattern ${actualPattern} includes a '/', but that isn't supported by the real sftp client`
+        expectedPattern === actualPattern,
+        `expected pattern ${expectedPattern} but got ${actualPattern}`
       );
-      assert(expectedPattern === actualPattern, `expected pattern ${expectedPattern} but got ${actualPattern}`);
     }
     return new Promise((resolve) => {
       return resolve(files);
@@ -178,33 +192,37 @@ export function listMany(expectedPaths) {
   };
   expectedPaths.map((path) => {
     if (path.expectedPattern) {
+      const expectedPatternIncludesSlash = (
+        path.expectedPattern.constructor.name === "RegExp"
+          ? path.expectedPattern.source
+          : path.expectedPattern
+      ).includes("/");
       assert(
-        !path.expectedPattern.includes("/"),
+        !expectedPatternIncludesSlash,
         `expected pattern ${path.expectedPattern} includes a '/', but that isn't supported by the real sftp client`
       );
     }
-    mockedPaths[path.expectedPath] = { expectedPattern: path.expectedPattern, files: path.files };
+    mockedPaths[path.expectedPath] = {
+      expectedPattern: path.expectedPattern,
+      files: path.files,
+    };
   });
   stub.list = (actualPath, actualPattern) => {
-    assert(mockedPaths[actualPath], `expected paths ${Object.keys(mockedPaths)} but got ${actualPath}`);
+    assert(
+      mockedPaths[actualPath],
+      `expected paths ${Object.keys(mockedPaths)} but got ${actualPath}`
+    );
     if (actualPattern.constructor.name === "RegExp") {
       assert(
-        !actualPattern.source.includes("/"),
-        `actual pattern ${actualPattern.source} includes a '/', but that isn't supported by the real sftp client`
-      );
-      assert(
         mockedPaths[actualPath].expectedPattern.constructor.name === "RegExp" &&
-          mockedPaths[actualPath].expectedPattern.source === actualPattern.source,
+          mockedPaths[actualPath].expectedPattern.source ===
+            actualPattern.source,
         `expected pattern ${mockedPaths[actualPath].expectedPattern} but got ${actualPattern}`
       );
     } else {
       assert(
         mockedPaths[actualPath].expectedPattern === actualPattern,
         `expected pattern ${mockedPaths[actualPath].expectedPattern} but got ${actualPattern}`
-      );
-      assert(
-        !actualPattern.includes("/"),
-        `actual pattern ${actualPattern} includes a '/', but that isn't supported by the real sftp client`
       );
     }
     return new Promise((resolve) => {
@@ -270,7 +288,10 @@ export function exists(expectedPath, fileExists) {
     return;
   };
   stub.exists = (actualPath) => {
-    assert(Object.keys(expectedExistPaths).includes(actualPath), `SFTP exists for path ${actualPath} was not expected`);
+    assert(
+      Object.keys(expectedExistPaths).includes(actualPath),
+      `SFTP exists for path ${actualPath} was not expected`
+    );
     return new Promise((resolve) => {
       return resolve(expectedExistPaths[actualPath]);
     });

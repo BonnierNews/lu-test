@@ -5,7 +5,7 @@ export default async function runSequence(app, sequenceName, message) {
   try {
     await triggerMessage(app, message, { key: sequenceName });
     const last = recordedMessages()[recordedMessages().length - 1];
-    if (last.attributes.key.split(".").pop() !== "processed") {
+    if (last?.attributes?.key?.split(".").pop() !== "processed") {
       throw new Error("Sequence not processed, see log");
     }
     return last;

@@ -63,6 +63,7 @@ export function reset() {
 export function recordedMessages() {
   return messages;
 }
+
 export function recordedMessageHandlerResponses() {
   return messageHandlerResponses;
 }

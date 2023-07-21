@@ -1,6 +1,6 @@
 import { expect } from "chai";
 
-import helpers from "../../index.js";
+import * as helpers from "../../index.js";
 
 const expectedExports = [
   "fakeApi",
@@ -19,13 +19,14 @@ const expectedExports = [
   "fakeGcpAuth",
   "fakePubSub",
   "runSequence",
-  "initFakeApi",
 ];
 
 describe("Exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      expect(Object.keys(helpers).join(",")).to.equal(expectedExports.join(","));
+      expect(Object.keys(helpers).sort().join(",")).to.equal(
+        expectedExports.sort().join(",")
+      );
     });
   });
 });

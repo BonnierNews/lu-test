@@ -1,0 +1,16 @@
+{
+  "reporter": [
+    "text",
+    "html"
+  ],
+  "exclude": [
+    "coverage",
+    "test/feature",
+    "test/setup.js"
+  ],
+  "all": true,
+  "statements": "100",
+  "branches": "100",
+  "functions": "100",
+  "lines": "100"
+}

@@ -19,7 +19,10 @@ Feature("fake-gcs feature", () => {
 
     When("we write the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const writeStream = storage.bucket("some-bucket").file("dir/file.txt").createWriteStream();
+      const writeStream = storage
+        .bucket("some-bucket")
+        .file("dir/file.txt")
+        .createWriteStream();
 
       const readStream = new stream.Readable();
       readStream.push("some text\n");
@@ -29,6 +32,32 @@ Feature("fake-gcs feature", () => {
 
     Then("we should have cached a written file", () => {
       fakeGcs.written(filePath).should.eql("some text\n");
+    });
+  });
+
+  Scenario("Write a large file to google", () => {
+    Given("there's a target we can write to", () => {
+      fakeGcs.mockFile(filePath);
+    });
+
+    When("we write the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const writeStream = storage
+        .bucket("some-bucket")
+        .file("dir/file.txt")
+        .createWriteStream();
+
+      const readStream = new stream.Readable();
+      for (let index = 0; index < 1000; index++) {
+        readStream.push("some text\n");
+      }
+      readStream.push(null);
+      await pipeline(readStream, writeStream);
+    });
+
+    Then("we should have cached a written file", () => {
+      fakeGcs.written(filePath).should.include("some text\n");
+      fakeGcs.written(filePath).length.should.eql(10000);
     });
   });
 
@@ -43,7 +72,10 @@ Feature("fake-gcs feature", () => {
 
     When("we write to file1's path", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const fileOne = storage.bucket("some-bucket").file("dir/file_1.txt").createWriteStream();
+      const fileOne = storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .createWriteStream();
       const readStream = new stream.Readable();
       readStream.push("some text\n");
       readStream.push(null);
@@ -52,7 +84,10 @@ Feature("fake-gcs feature", () => {
 
     And("we write to file2's path", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const writeStream = storage.bucket("some-bucket").file("dir/file_2.txt").createWriteStream();
+      const writeStream = storage
+        .bucket("some-bucket")
+        .file("dir/file_2.txt")
+        .createWriteStream();
 
       const readStream = new stream.Readable();
       readStream.push("some other text\n");
@@ -75,7 +110,10 @@ Feature("fake-gcs feature", () => {
     const readOne = [];
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
+      const readStream = storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -88,7 +126,10 @@ Feature("fake-gcs feature", () => {
     const readTwo = [];
     And("we try reading another one", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage.bucket("some-bucket").file("dir/file_2.txt").createReadStream();
+      const readStream = storage
+        .bucket("some-bucket")
+        .file("dir/file_2.txt")
+        .createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -98,10 +139,13 @@ Feature("fake-gcs feature", () => {
       });
     });
 
-    Then("we should have read 'some stuff\\n' and 'some other stuff\\n'", () => {
-      readOne.join("").should.eql("some stuff\n");
-      readTwo.join("").should.eql("some other stuff\n");
-    });
+    Then(
+      "we should have read 'some stuff\\n' and 'some other stuff\\n'",
+      () => {
+        readOne.join("").should.eql("some stuff\n");
+        readTwo.join("").should.eql("some other stuff\n");
+      }
+    );
   });
 
   Scenario("Check if a file exists on google with readable data", () => {
@@ -144,7 +188,10 @@ Feature("fake-gcs feature", () => {
     let files;
     When("we ask ask for a list of files", () => {
       const storage = new Storage(config.gcs.credentials);
-      files = storage.bucket("some-bucket").file("dir/file.txt").getFiles({ prefix: "dir/" });
+      files = storage
+        .bucket("some-bucket")
+        .file("dir/file.txt")
+        .getFiles({ prefix: "dir/" });
     });
 
     Then("we verify that there is just one", () => {
@@ -158,7 +205,19 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("when we try to mock the file again, it throws an error", () => {
-      assert.throws(() => fakeGcs.mockFile(filePath), /has already been mocked/);
+      assert.throws(
+        () => fakeGcs.mockFile(filePath),
+        /has already been mocked/
+      );
+    });
+  });
+
+  Scenario("Mock with the wrong bucket", () => {
+    When("we try to mock the file, it throws an error", () => {
+      assert.throws(
+        () => fakeGcs.mockFile("gs://some-other-bucket/dir/file.txt"),
+        /Invalid gcs bucket some-other-bucket/
+      );
     });
   });
 });

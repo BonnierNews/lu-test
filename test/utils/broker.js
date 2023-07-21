@@ -45,7 +45,6 @@ function initRecipes(recipes) {
   return {
     first: (key) => firstMap[`${key}`],
     next: (replyKey) => recipeMap[replyKey],
-    keys: () => recipes.map((r) => `${r.namespace}.${r.name}.#`),
     handler: (routingKey) => {
       return lambdaMap[routingKey];
     },
@@ -86,11 +85,6 @@ async function messageHandler(recipeMap, req, res) {
   const handler = recipeMap.handler(key);
   if (!handler) {
     const firstStep = recipeMap.first(key);
-    if (!firstStep) {
-      res.status(400).send(`Unknown sequence ${key}`);
-      return;
-    }
-
     const pubsub = new PubSub();
     const messagePublisher = await pubsub.topic("some-topic");
     await messagePublisher.publishMessage({
@@ -104,11 +98,7 @@ async function messageHandler(recipeMap, req, res) {
   const result = await handler(message);
   const newData = [ ...data ];
   if (result) {
-    if (Array.isArray(result)) {
-      newData.push(...result);
-    } else {
-      newData.push(result);
-    }
+    newData.push(result);
   }
 
   const nextStep = recipeMap.next(key);

@@ -67,6 +67,9 @@ Feature("fake-cloud-task feature", () => {
         m.body.should.eql({});
       });
     });
+    And("the queue path should be set", () => {
+      cloudTask.queuePath().should.eql("fix-me");
+    });
   });
 
   Scenario("successfully faking an errored task", () => {
@@ -87,6 +90,9 @@ Feature("fake-cloud-task feature", () => {
     });
     Then("we should have received an error", () => {
       response.message.should.eql("Create task failed!!");
+    });
+    And("the queue path should be set", () => {
+      cloudTask.queuePath().should.eql("fix-me");
     });
   });
 });

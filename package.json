@@ -1,6 +1,6 @@
 {
   "name": "@bonniernews/lu-test",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "Test helpers.",
   "main": "index.js",
   "engines": {
@@ -52,6 +52,9 @@
     "index.js",
     "test/helpers/*.js"
   ],
+  "overrides": {
+    "optionator@<0.9.3": "^0.9.3"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BonnierNews/lu-test.git"

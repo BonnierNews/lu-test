@@ -1,8 +1,10 @@
 {
   "reporter": [
-    "text"
+    "text",
+    "html"
   ],
   "exclude": [
+    "coverage",
     "test/feature",
     "test/setup.js"
   ],

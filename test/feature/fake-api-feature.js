@@ -241,6 +241,9 @@ Feature("fake-api mount feature", () => {
     And("the mount's called body should be the expected body", () => {
       mount.calledBody().should.eql(content);
     });
+    And("the mount's posted body should be the expected body", () => {
+      mount.postedBody().should.eql(content);
+    });
   });
 
   Scenario("fake with multiple mounts", () => {

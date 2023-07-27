@@ -1,6 +1,6 @@
 {
   "name": "@bonniernews/lu-test",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Test helpers.",
   "main": "index.js",
   "engines": {
@@ -25,12 +25,12 @@
     "@google-cloud/storage": "^6.9.1",
     "@google-cloud/tasks": "^3.0.5",
     "basic-ftp": "^4.6.6",
-    "chai": "^4.3.4",
+    "chai": "^4.3.7",
     "csv-parse": "^5.3.3",
     "event-stream": "^4.0.1",
-    "exp-config": "^3.0.0",
-    "google-auth-library": "8.7.0",
-    "mocha": "^9.2.0",
+    "exp-config": "^4.2.1",
+    "google-auth-library": "^8.9.0",
+    "mocha": "^10.2.0",
     "mocha-cakes-2": "^3.3.0",
     "nock": "^13.0.11",
     "sinon": "^15.0.0",
@@ -42,11 +42,12 @@
     "c8": "^8.0.0",
     "chai-exclude": "^2.0.3",
     "depcheck": "^1.4.0",
-    "eslint": "^8.32.0",
-    "eslint-config-exp": "^0.5.0",
+    "eslint": "^8.45.0",
+    "eslint-config-exp": "^0.6.2",
+    "eslint-plugin-json": "^3.1.0",
     "express": "^4.18.2",
     "express-promise-router": "^4.1.1",
-    "prettier": "^2.1.1"
+    "prettier": "^3.0.0"
   },
   "files": [
     "index.js",

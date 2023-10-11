@@ -11,7 +11,7 @@ function init() {
   }
 }
 
-export function enableGetRequestHeaders() {
+export function authenticated() {
   init();
   stub.getIdTokenClient = () => {
     return {

@@ -6,7 +6,7 @@ Feature("fake-gcp-auth feature", () => {
   beforeEachScenario(fakeGcpAuth.reset);
   Scenario("successfully get GCP auth", () => {
     Given("we enable request headers", () => {
-      fakeGcpAuth.enableGetRequestHeaders();
+      fakeGcpAuth.authenticated();
     });
     let response;
     When("making an auth request", async () => {

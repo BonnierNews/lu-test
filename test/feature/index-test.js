@@ -19,6 +19,7 @@ const expectedExports = [
   "fakeGcpAuth",
   "fakePubSub",
   "runSequence",
+  "assertUnrecoverable",
 ];
 
 describe("Exposed features", () => {

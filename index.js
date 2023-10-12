@@ -1,4 +1,4 @@
-export { assertRejected, assertRetry } from "./test/helpers/assert-helpers.js";
+export { assertRejected, assertRetry, assertUnrecoverable } from "./test/helpers/assert-helpers.js";
 export { default as buildMessage } from "./test/helpers/build-message.js";
 export { default as clone } from "./test/helpers/clone.js";
 export { default as fakeApi } from "./test/helpers/fake-api.js";

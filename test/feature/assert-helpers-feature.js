@@ -1,4 +1,4 @@
-import { assertRejected, assertRetry } from "../helpers/assert-helpers.js";
+import { assertRejected, assertRetry, assertUnrecoverable } from "../helpers/assert-helpers.js";
 
 const rejectedError = () => {
   try {
@@ -14,6 +14,15 @@ const retriedError = () => {
     throw new Error("some error");
   } catch (error) {
     error.retried = true;
+    throw error;
+  }
+};
+
+const unrecoverableError = () => {
+  try {
+    throw new Error("some error");
+  } catch (error) {
+    error.unrecoverable = true;
     throw error;
   }
 };
@@ -64,6 +73,30 @@ Feature("assert-helpers feature", () => {
     });
     Then("we should have errored because it wasn't rejected", () => {
       response.message.should.eql("not retried");
+    });
+  });
+
+  Scenario("successfully assert unrecoverable", () => {
+    let response;
+    When("asserting a unrecoverable function", async () => {
+      response = await assertUnrecoverable(unrecoverableError);
+    });
+    Then("we should have received the error message", () => {
+      response.message.should.eql("some error");
+    });
+  });
+
+  Scenario("successfully error when not unrecoverable", () => {
+    let response;
+    When("asserting a rejected function", async () => {
+      try {
+        await assertUnrecoverable(() => {});
+      } catch (error) {
+        response = error;
+      }
+    });
+    Then("we should have errored because it wasn't rejected", () => {
+      response.message.should.eql("not unrecoverable");
     });
   });
 });

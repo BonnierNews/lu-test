@@ -20,3 +20,13 @@ export async function assertRetry(fn) {
   }
   throw new chai.AssertionError("not retried");
 }
+
+export async function assertUnrecoverable(fn) {
+  try {
+    await fn();
+  } catch (error) {
+    error.should.have.property("unrecoverable");
+    return error;
+  }
+  throw new chai.AssertionError("not unrecoverable");
+}

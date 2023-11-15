@@ -11,7 +11,7 @@ export function mockFile(path, opts = { content: "" }) {
   const { Bucket: bucket } = parseUri(path);
   if (!bucketStub) bucketStub = sandbox.stub(Storage.prototype, "bucket");
 
-  bucketStub.withArgs(bucket).returns({ file: getOrCreateFileMock(path, opts) });
+  return bucketStub.withArgs(bucket).returns({ file: getOrCreateFileMock(path, opts) });
 }
 
 function getOrCreateFileMock(path, opts) {

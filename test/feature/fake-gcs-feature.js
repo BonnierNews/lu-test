@@ -164,6 +164,19 @@ Feature("fake-gcs feature", () => {
     });
   });
 
+  Scenario("The stream throws an error", () => {
+    Given("there's a mocked file with readable data", () => {
+      fakeGcs.mockFile(filePath, { content: "blahoga\n" }).throws(new Error("some error"));
+    });
+
+    When("we ask if the file exists", () => {
+      const storage = new Storage(config.gcs.credentials);
+      assert.throws(() => {
+        storage.bucket("some-bucket").file("dir/file.txt");
+      }, /some error/);
+    });
+  });
+
   Scenario("Check if a file exists on google without readable data", () => {
     Given("there's a mocked file without readable data", () => {
       fakeGcs.mockFile(filePath);

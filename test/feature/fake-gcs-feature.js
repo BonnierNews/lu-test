@@ -148,6 +148,133 @@ Feature("fake-gcs feature", () => {
     );
   });
 
+  Scenario("Read the same file multiple times from google", () => {
+    Given("there's two readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "some stuff\n" });
+    });
+
+    const readOne = [];
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const readStream = storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .createReadStream();
+
+      await pipeline(readStream, async function* (iterable) {
+        for await (const data of iterable) {
+          readOne.push(data);
+          yield;
+        }
+      });
+    });
+
+    const readTwo = [];
+    And("we try reading another one", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const readStream = storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .createReadStream();
+
+      await pipeline(readStream, async function* (iterable) {
+        for await (const data of iterable) {
+          readTwo.push(data);
+          yield;
+        }
+      });
+    });
+
+    Then(
+      "we should have read 'some stuff\\n' and 'some other stuff\\n'",
+      () => {
+        readOne.join("").should.eql("some stuff\n");
+        readTwo.join("").should.eql("some stuff\n");
+      }
+    );
+  });
+
+  Scenario("Read a file with specific encoding from google", () => {
+    Given("there's two readable files", () => {
+      const content = Buffer.from("tést", "latin1");// .toString("latin1");
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content, encoding: "latin1" });
+    });
+
+    const readOne = [];
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const readStream = storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .createReadStream();
+
+      await pipeline(readStream, async function* (iterable) {
+        for await (const data of iterable) {
+          readOne.push(data);
+          yield;
+        }
+      });
+    });
+
+    Then(
+      "we should have read 'tést'",
+      () => {
+        readOne.join("").should.eql("tést");
+        // Buffer.from(readOne.join("")).toString("utf-8").should.eql("tést");
+      }
+    );
+  });
+
+  Scenario("Get a files metadata from google", () => {
+    Given("there's two readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "some,csv,file\n" });
+    });
+
+    let metadata;
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      metadata = await storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .getMetadata();
+    });
+
+    Then("we should have got some metadata", () => {
+      metadata.should.eql({
+        contentEncoding: "utf-8",
+        contentType: "text/csv",
+        name: "file_1.csv",
+        size: 14,
+      });
+    });
+  });
+
+  Scenario("Delete a file in google", () => {
+    Given("there's two readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "some,csv,file\n" });
+    });
+
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      await storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .delete();
+    });
+
+    let files;
+    Then("we list files", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      files = await storage
+        .bucket("some-bucket")
+        .getFiles("dir/");
+    });
+
+    And("we should have no files", () => {
+      files.length.should.eql(0);
+    });
+  });
+
   Scenario("Check if a file exists on google with readable data", () => {
     Given("there's a mocked file with readable data", () => {
       fakeGcs.mockFile(filePath, { content: "blahoga\n" });
@@ -203,7 +330,6 @@ Feature("fake-gcs feature", () => {
       const storage = new Storage(config.gcs.credentials);
       files = storage
         .bucket("some-bucket")
-        .file("dir/file.txt")
         .getFiles({ prefix: "dir/" });
     });
 

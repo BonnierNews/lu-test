@@ -2,6 +2,7 @@ import { Writable, Readable } from "stream";
 import { Storage } from "@google-cloud/storage";
 import { createSandbox } from "sinon";
 import config from "exp-config";
+import { Blob } from "buffer";
 
 let writes = {}, mocks = {}, readable = {};
 let bucketStub;
@@ -11,26 +12,46 @@ export function mockFile(path, opts = { content: "" }) {
   const { Bucket: bucket } = parseUri(path);
   if (!bucketStub) bucketStub = sandbox.stub(Storage.prototype, "bucket");
 
-  return bucketStub.withArgs(bucket).returns({ file: getOrCreateFileMock(path, opts) });
+  return bucketStub.withArgs(bucket).returns({
+    getFiles: ({ prefix }) => Object.keys(readable).map((s) => `gs://${bucket}/${s}`).filter((s) => s.includes(prefix)),
+    file: getOrCreateFileMock(path, opts),
+  });
 }
 
 function getOrCreateFileMock(path, opts) {
-  const { Bucket: bucket, Key } = parseUri(path);
+  const { Key } = parseUri(path);
 
   if (mocks[Key]) throw new Error(`${path} has already been mocked`);
 
-  readable[Key] = Readable.from(opts.content, { encoding: "utf-8" });
+  readable[Key] = () => Readable.from(opts.content, { encoding: opts.encoding || "utf-8" });
 
   mocks[Key] = (key) => {
     return {
       createWriteStream: getWriter(key),
       createReadStream: () => readable[key],
       exists: () => [ Boolean(opts.content) ],
-      getFiles: ({ prefix }) => Object.keys(readable).map((s) => `gs://${bucket}/${s}`).filter((s) => s.includes(prefix)),
+      delete: () => delete mocks[key],
+      getMetadata: () => ({ name: Key.split("/").pop(), size: new Blob([ opts.content ]).size, contentEncoding: opts.encoding || "utf-8", contentType: contentType(Key) }),
     };
   };
 
   return mocks[Key];
+}
+
+function contentType(Key) {
+  const ext = Key.split(".").pop();
+  switch (ext) {
+    case "txt":
+      return "text/plain";
+    case "json":
+      return "application/json";
+    case "gz":
+      return "application/gzip";
+    case "csv":
+      return "text/csv";
+    default:
+      return "application/octet-stream";
+  }
 }
 
 function getWriter(key) {

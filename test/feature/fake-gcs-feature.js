@@ -226,7 +226,7 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("Get a csv file's metadata from google", () => {
-    Given("there's two readable files", () => {
+    Given("there's a file", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "some,csv,file\n" });
     });
 
@@ -250,7 +250,7 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("Get a json file's metadata from google", () => {
-    Given("there's two readable files", () => {
+    Given("there's a file", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.json", { content: '{"attr":"val"}\n' });
     });
 
@@ -274,8 +274,7 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("Get a gzipped file's metadata from google", () => {
-    Given("there's two readable files", () => {
-
+    Given("there's a file", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.json.gz", { content: zlib.gzipSync('{"attr":"val"}\n') });
     });
 
@@ -299,7 +298,7 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("Get a text file's metadata from google", () => {
-    Given("there's two readable files", () => {
+    Given("there's a file", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "some data" });
     });
 
@@ -322,8 +321,8 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Get a text file's metadata from google", () => {
-    Given("there's two readable files", () => {
+  Scenario("Get an unknown file's metadata from google", () => {
+    Given("there's a file", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1", { content: "some data" });
     });
 
@@ -347,7 +346,7 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("Delete a file in google", () => {
-    Given("there's two readable files", () => {
+    Given("there's a file", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "some,csv,file\n" });
     });
 

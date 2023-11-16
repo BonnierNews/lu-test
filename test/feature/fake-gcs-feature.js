@@ -3,6 +3,7 @@ import stream from "stream";
 import { promisify } from "util";
 import assert from "assert";
 import config from "exp-config";
+import zlib from "zlib";
 
 import * as fakeGcs from "../helpers/fake-gcs.js";
 
@@ -196,7 +197,7 @@ Feature("fake-gcs feature", () => {
 
   Scenario("Read a file with specific encoding from google", () => {
     Given("there's two readable files", () => {
-      const content = Buffer.from("tést", "latin1");// .toString("latin1");
+      const content = Buffer.from("tést", "latin1");
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content, encoding: "latin1" });
     });
 
@@ -220,12 +221,11 @@ Feature("fake-gcs feature", () => {
       "we should have read 'tést'",
       () => {
         readOne.join("").should.eql("tést");
-        // Buffer.from(readOne.join("")).toString("utf-8").should.eql("tést");
       }
     );
   });
 
-  Scenario("Get a files metadata from google", () => {
+  Scenario("Get a csv file's metadata from google", () => {
     Given("there's two readable files", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "some,csv,file\n" });
     });
@@ -245,6 +245,103 @@ Feature("fake-gcs feature", () => {
         contentType: "text/csv",
         name: "file_1.csv",
         size: 14,
+      });
+    });
+  });
+
+  Scenario("Get a json file's metadata from google", () => {
+    Given("there's two readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.json", { content: '{"attr":"val"}\n' });
+    });
+
+    let metadata;
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      metadata = await storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .getMetadata();
+    });
+
+    Then("we should have got some metadata", () => {
+      metadata.should.eql({
+        contentEncoding: "utf-8",
+        contentType: "application/json",
+        name: "file_1.json",
+        size: 15,
+      });
+    });
+  });
+
+  Scenario("Get a gzipped file's metadata from google", () => {
+    Given("there's two readable files", () => {
+
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.json.gz", { content: zlib.gzipSync('{"attr":"val"}\n') });
+    });
+
+    let metadata;
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      metadata = await storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .getMetadata();
+    });
+
+    Then("we should have got some metadata", () => {
+      metadata.should.eql({
+        contentEncoding: "utf-8",
+        contentType: "application/gzip",
+        name: "file_1.json.gz",
+        size: 35,
+      });
+    });
+  });
+
+  Scenario("Get a text file's metadata from google", () => {
+    Given("there's two readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "some data" });
+    });
+
+    let metadata;
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      metadata = await storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .getMetadata();
+    });
+
+    Then("we should have got some metadata", () => {
+      metadata.should.eql({
+        contentEncoding: "utf-8",
+        contentType: "text/plain",
+        name: "file_1.txt",
+        size: 9,
+      });
+    });
+  });
+
+  Scenario("Get a text file's metadata from google", () => {
+    Given("there's two readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1", { content: "some data" });
+    });
+
+    let metadata;
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      metadata = await storage
+        .bucket("some-bucket")
+        .file("dir/file_1.txt")
+        .getMetadata();
+    });
+
+    Then("we should have got some metadata", () => {
+      metadata.should.eql({
+        contentEncoding: "utf-8",
+        contentType: "application/octet-stream",
+        name: "file_1",
+        size: 9,
       });
     });
   });

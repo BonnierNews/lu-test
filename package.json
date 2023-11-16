@@ -14,7 +14,8 @@
     "prettier": "prettier \"**/*.{js,json,md}\"",
     "prettier:apply": "npm run prettier -- --write",
     "coverage": "c8 --all npm test",
-    "check-coverage": "c8 check-coverage"
+    "check-coverage": "c8 check-coverage",
+    "local-coverage": "c8 --reporter html npm test && c8 check-coverage || open ./coverage/index.html"
   },
   "type": "module",
   "keywords": [],

@@ -1,41 +1,34 @@
 import { Writable, Readable } from "stream";
 import { Storage } from "@google-cloud/storage";
 import { createSandbox } from "sinon";
-import config from "exp-config";
 import { Blob } from "buffer";
 
-let writes = {}, mocks = {}, readable = {};
+let files = {};
+
 let bucketStub;
 const sandbox = createSandbox();
 
-export function mockFile(path, opts = { content: "" }) {
+export function mockFile(path, opts) {
   const { Bucket: bucket } = parseUri(path);
   if (!bucketStub) bucketStub = sandbox.stub(Storage.prototype, "bucket");
 
+  if (files[path]) throw new Error(`${path} has already been mocked`);
+
+  files[path] = { content: opts?.content, encoding: opts?.encoding || "utf-8" };
+
   return bucketStub.withArgs(bucket).returns({
-    getFiles: ({ prefix }) => Object.keys(readable).map((s) => `gs://${bucket}/${s}`).filter((s) => s.includes(prefix)),
-    file: getOrCreateFileMock(path, opts),
+    getFiles: ({ prefix }) => Object.keys(files).filter((k) => files[k]?.content && k.includes(prefix)),
+    file: (key) => {
+      const file = files[`gs://${bucket}/${key}`];
+      return {
+        createWriteStream: getWriter(file),
+        createReadStream: () => Readable.from(file?.content, { encoding: file.encoding || "utf-8" }),
+        exists: () => [ Boolean(file.content) ],
+        delete: () => delete files[`gs://${bucket}/${key}`],
+        getMetadata: () => file?.content ? ({ name: key.split("/").pop(), size: new Blob([ file.content || 0 ]).size, contentEncoding: file.encoding || "utf-8", contentType: contentType(key) }) : undefined,
+      };
+    },
   });
-}
-
-function getOrCreateFileMock(path, opts) {
-  const { Key } = parseUri(path);
-
-  if (mocks[Key]) throw new Error(`${path} has already been mocked`);
-
-  readable[Key] = () => Readable.from(opts.content, { encoding: opts.encoding || "utf-8" });
-
-  mocks[Key] = (key) => {
-    return {
-      createWriteStream: getWriter(key),
-      createReadStream: () => readable[key],
-      exists: () => [ Boolean(opts.content) ],
-      delete: () => delete mocks[key],
-      getMetadata: () => ({ name: Key.split("/").pop(), size: new Blob([ opts.content ]).size, contentEncoding: opts.encoding || "utf-8", contentType: contentType(Key) }),
-    };
-  };
-
-  return mocks[Key];
 }
 
 function contentType(Key) {
@@ -54,14 +47,14 @@ function contentType(Key) {
   }
 }
 
-function getWriter(key) {
+function getWriter(file) {
   return () => {
     return new Writable({
       write: function (chunk, _, next) {
-        if (writes[key]) {
-          writes[key] += chunk.toString();
+        if (file.content) {
+          file.content += chunk.toString();
         } else {
-          writes[key] = chunk.toString();
+          file.content = chunk.toString();
         }
         next();
       },
@@ -70,15 +63,12 @@ function getWriter(key) {
 }
 
 export function written(path) {
-  const { Key } = parseUri(path);
-  return writes[Key];
+  return files[path]?.content;
 }
 
 export function reset() {
   bucketStub = null;
-  mocks = {};
-  writes = {};
-  readable = {};
+  files = {};
   sandbox.restore();
 }
 
@@ -89,7 +79,6 @@ function parseUri(uri) {
       Bucket: parts.host,
       Key: parts.pathname.slice(1),
     };
-    if (conf.Bucket !== config.gcs.bucket) throw new Error(`Invalid gcs bucket ${conf.Bucket}`);
     return conf;
   }
 }

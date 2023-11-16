@@ -36,6 +36,48 @@ Feature("fake-gcs feature", () => {
     });
   });
 
+  Scenario("Write an empty file then read it", () => {
+    Given("there's a target we can write to", () => {
+      fakeGcs.mockFile(filePath);
+    });
+
+    When("we write the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const writeStream = storage
+        .bucket("some-bucket")
+        .file("dir/file.txt")
+        .createWriteStream();
+
+      const readStream = new stream.Readable();
+      readStream.push(null);
+      await pipeline(readStream, writeStream);
+    });
+
+    Then("we should have cached a written file", () => {
+      fakeGcs.written(filePath).should.eql("");
+    });
+
+    const read = [];
+    Then("we read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const readStream = storage
+        .bucket("some-bucket")
+        .file("dir/file.txt")
+        .createReadStream();
+
+      await pipeline(readStream, async function* (iterable) {
+        for await (const data of iterable) {
+          read.push(data);
+          yield;
+        }
+      });
+    });
+
+    Then("we should have cached a written file", () => {
+      read.should.eql([ "" ]);
+    });
+  });
+
   Scenario("Write a large file to google", () => {
     Given("there's a target we can write to", () => {
       fakeGcs.mockFile(filePath);
@@ -467,6 +509,25 @@ Feature("fake-gcs feature", () => {
         name: "file_1",
         size: 9,
       });
+    });
+  });
+
+  Scenario("Get a metadata from a file that does not exist from google", () => {
+    Given("there's a file", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv");
+    });
+
+    let metadata;
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      metadata = await storage
+        .bucket("some-bucket")
+        .file("dir/file_1.csv")
+        .getMetadata();
+    });
+
+    Then("we should have got some metadata", () => {
+      should.not.exist(metadata);
     });
   });
 

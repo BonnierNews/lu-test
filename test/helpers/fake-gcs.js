@@ -14,7 +14,7 @@ export function mockFile(path, opts) {
 
   if (files[path]) throw new Error(`${path} has already been mocked`);
 
-  files[path] = { content: opts?.content, encoding: opts?.encoding || "utf-8" };
+  files[path] = { content: opts?.content, written: Boolean(opts?.content), encoding: opts?.encoding || "utf-8" };
 
   return bucketStub.withArgs(bucket).returns({
     getFiles: ({ prefix }) => Object.keys(files).filter((k) => files[k]?.content && k.includes(prefix)),
@@ -22,10 +22,15 @@ export function mockFile(path, opts) {
       const file = files[`gs://${bucket}/${key}`];
       return {
         createWriteStream: getWriter(file),
-        createReadStream: () => Readable.from(file?.content, { encoding: file.encoding || "utf-8" }),
-        exists: () => [ Boolean(file.content) ],
+        createReadStream: () => {
+          if (file.written && !file.content) {
+            file.content = "";
+          }
+          return Readable.from(file?.content, { encoding: file.encoding });
+        },
+        exists: () => [ Boolean(file.written) ],
         delete: () => delete files[`gs://${bucket}/${key}`],
-        getMetadata: () => file?.content ? ({ name: key.split("/").pop(), size: new Blob([ file.content || 0 ]).size, contentEncoding: file.encoding || "utf-8", contentType: contentType(key) }) : undefined,
+        getMetadata: () => file?.written ? ({ name: key.split("/").pop(), size: new Blob([ file.content ]).size, contentEncoding: file.encoding, contentType: contentType(key) }) : undefined,
       };
     },
   });
@@ -49,6 +54,7 @@ function contentType(Key) {
 
 function getWriter(file) {
   return () => {
+    file.written = true;
     return new Writable({
       write: function (chunk, _, next) {
         if (file.content) {
@@ -63,7 +69,8 @@ function getWriter(file) {
 }
 
 export function written(path) {
-  return files[path]?.content;
+  const file = files[path];
+  return file.written && (file.content || "");
 }
 
 export function reset() {

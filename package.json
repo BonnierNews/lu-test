@@ -1,6 +1,6 @@
 {
   "name": "@bonniernews/lu-test",
-  "version": "5.1.0",
+  "version": "5.2.0",
   "description": "Test helpers.",
   "main": "index.js",
   "engines": {

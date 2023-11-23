@@ -8,7 +8,8 @@ export default async function runSequence(app, sequenceName, message) {
     if (last?.attributes?.key?.split(".").pop() !== "processed") {
       throw new Error("Sequence not processed, see log");
     }
-    return last;
+    const triggeredFlows = [ ...new Set(recordedMessages().map((o) => o.attributes.key.split(".").slice(0, 2).join("."))) ];
+    return { ...last, triggeredFlows };
   } finally {
     reset();
   }

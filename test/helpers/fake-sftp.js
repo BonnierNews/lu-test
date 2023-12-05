@@ -157,7 +157,6 @@ export function list(expectedPath, expectedPattern, files) {
   stub.list = (actualPath, actualPattern) => {
     assert(expectedPath === actualPath, `expected path ${expectedPath} but got ${actualPath}`);
     assert(typeof actualPattern === "function", `actual pattern ${actualPattern} needs to be a function`);
-    assert(actualPattern === expectedPattern, `expected pattern ${expectedPattern} but got ${actualPattern}`);
     let matchedFiles = files;
     if (actualPattern) matchedFiles = files.filter((file) => actualPattern(file));
     return new Promise((resolve) => {

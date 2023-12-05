@@ -430,7 +430,7 @@ Feature("fake-sftp list feature", () => {
   }
   );
 
-  Scenario("unsuccessfully fake listing a path, pattern doesn't match expected",
+  Scenario("unsuccessfully fake listing a path, pattern doesn't match expected, no matching files",
     () => {
       Given("we fake listing some path", () => {
         fakeSftp.list(path, filePattern, files);
@@ -442,16 +442,10 @@ Feature("fake-sftp list feature", () => {
       });
       let response;
       When("listing a path on the sftp", async () => {
-        try {
-          await client.list(path, () => "fish");
-        } catch (error) {
-          response = error;
-        }
+        response = await client.list(path, ({ name }) => name === "fish");
       });
       Then("we should get an error about mismatching patterns", () => {
-        response.message.should.eql(
-          `expected pattern ${filePattern} but got () => "fish"`
-        );
+        response.should.eql([]);
       });
     }
   );

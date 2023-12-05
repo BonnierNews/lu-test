@@ -148,39 +148,20 @@ export function putError(message = "sftp put failed") {
 
 export function list(expectedPath, expectedPattern, files) {
   if (expectedPattern) {
-    const expectedPatternIncludesSlash = (
-      expectedPattern.constructor.name === "RegExp"
-        ? expectedPattern.source
-        : expectedPattern
-    ).includes("/");
-    assert(
-      !expectedPatternIncludesSlash,
-      `expected pattern ${expectedPattern} includes a '/', but that isn't supported by the real sftp client`
-    );
+    assert(typeof expectedPattern === "function", `expected pattern ${expectedPattern} needs to be a function`);
   }
   init();
   stub.connect = () => {
     return;
   };
   stub.list = (actualPath, actualPattern) => {
-    assert(
-      expectedPath === actualPath,
-      `expected path ${expectedPath} but got ${actualPath}`
-    );
-    if (actualPattern.constructor.name === "RegExp") {
-      assert(
-        expectedPattern.constructor.name === "RegExp" &&
-          expectedPattern.source === actualPattern.source,
-        `expected pattern ${expectedPattern} but got ${actualPattern}`
-      );
-    } else {
-      assert(
-        expectedPattern === actualPattern,
-        `expected pattern ${expectedPattern} but got ${actualPattern}`
-      );
-    }
+    assert(expectedPath === actualPath, `expected path ${expectedPath} but got ${actualPath}`);
+    assert(typeof actualPattern === "function", `actual pattern ${actualPattern} needs to be a function`);
+    assert(actualPattern === expectedPattern, `expected pattern ${expectedPattern} but got ${actualPattern}`);
+    let matchedFiles = files;
+    if (actualPattern) matchedFiles = files.filter((file) => actualPattern(file));
     return new Promise((resolve) => {
-      return resolve(files);
+      return resolve(matchedFiles);
     });
   };
 }
@@ -192,15 +173,7 @@ export function listMany(expectedPaths) {
   };
   expectedPaths.map((path) => {
     if (path.expectedPattern) {
-      const expectedPatternIncludesSlash = (
-        path.expectedPattern.constructor.name === "RegExp"
-          ? path.expectedPattern.source
-          : path.expectedPattern
-      ).includes("/");
-      assert(
-        !expectedPatternIncludesSlash,
-        `expected pattern ${path.expectedPattern} includes a '/', but that isn't supported by the real sftp client`
-      );
+      assert(typeof path.expectedPattern === "function", `expected pattern ${path.expectedPattern} needs to be a function`);
     }
     mockedPaths[path.expectedPath] = {
       expectedPattern: path.expectedPattern,
@@ -212,19 +185,7 @@ export function listMany(expectedPaths) {
       mockedPaths[actualPath],
       `expected paths ${Object.keys(mockedPaths)} but got ${actualPath}`
     );
-    if (actualPattern.constructor.name === "RegExp") {
-      assert(
-        mockedPaths[actualPath].expectedPattern.constructor.name === "RegExp" &&
-          mockedPaths[actualPath].expectedPattern.source ===
-            actualPattern.source,
-        `expected pattern ${mockedPaths[actualPath].expectedPattern} but got ${actualPattern}`
-      );
-    } else {
-      assert(
-        mockedPaths[actualPath].expectedPattern === actualPattern,
-        `expected pattern ${mockedPaths[actualPath].expectedPattern} but got ${actualPattern}`
-      );
-    }
+    assert(actualPattern === mockedPaths[actualPath].expectedPattern, `expected pattern ${mockedPaths[actualPath].expectedPattern} but got ${actualPattern}`);
     return new Promise((resolve) => {
       return resolve(mockedPaths[actualPath].files);
     });

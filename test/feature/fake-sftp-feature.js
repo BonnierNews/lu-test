@@ -46,8 +46,8 @@ const otherPath = "/some-other-path";
 const otherData = "some other data";
 const otherFile = "file2";
 const files = [ file, otherFile ];
-const filePattern = "file";
-const filePatternRegExp = /file/;
+const filePattern = (fileName) => fileName.match("file");
+const filePatternRegExp = (fileName) => fileName.match(/file/);
 
 Feature("fake-sftp connection error feature", () => {
   beforeEachScenario(fakeSftp.reset);
@@ -413,27 +413,24 @@ Feature("fake-sftp list feature", () => {
     });
   });
 
-  Scenario(
-    "unsuccessfully trying to fake listing a path with a / in the pattern",
-    () => {
-      let response;
-      When("we try to fake listing a path with a / in the pattern", () => {
-        try {
-          fakeSftp.list(path, "/", files);
-        } catch (error) {
-          response = error;
-        }
-      });
-      Then("we should get an error about / in the path", () => {
-        response.message.should.eql(
-          "expected pattern / includes a '/', but that isn't supported by the real sftp client"
-        );
-      });
-    }
+  Scenario("unsuccessfully trying to fake listing a path with a pattern instead of a function", () => {
+    let response;
+    When("we try to fake listing a path with a pattern", () => {
+      try {
+        fakeSftp.list(path, /something/, files);
+      } catch (error) {
+        response = error;
+      }
+    });
+    Then("we should get an error about pattern not being a function", () => {
+      response.message.should.eql(
+        "expected pattern /something/ needs to be a function"
+      );
+    });
+  }
   );
 
-  Scenario(
-    "unsuccessfully fake listing a path, pattern doesn't match expected",
+  Scenario("unsuccessfully fake listing a path, pattern doesn't match expected",
     () => {
       Given("we fake listing some path", () => {
         fakeSftp.list(path, filePattern, files);
@@ -446,62 +443,35 @@ Feature("fake-sftp list feature", () => {
       let response;
       When("listing a path on the sftp", async () => {
         try {
-          await client.list(path, "fish");
+          await client.list(path, () => "fish");
         } catch (error) {
           response = error;
         }
       });
       Then("we should get an error about mismatching patterns", () => {
         response.message.should.eql(
-          `expected pattern ${filePattern} but got fish`
+          `expected pattern ${filePattern} but got () => "fish"`
         );
       });
     }
   );
 
   Scenario(
-    "unsuccessfully fake listing a path, pattern doesn't match expected, using regexp",
-    () => {
-      Given("we fake listing some path", () => {
-        fakeSftp.list(path, filePattern, files);
-      });
-      let client;
-      And("we can connect to an sftp", async () => {
-        client = new SftpClient();
-        await client.connect(sftpConfig);
-      });
-      let response;
-      When("listing a path on the sftp", async () => {
-        try {
-          await client.list(path, /fish/);
-        } catch (error) {
-          response = error;
-        }
-      });
-      Then("we should get an error about mismatching patterns", () => {
-        response.message.should.eql(
-          `expected pattern ${filePattern} but got /fish/`
-        );
-      });
-    }
-  );
-
-  Scenario(
-    "unsuccessfully trying to fake listing several paths with a / in the pattern",
+    "unsuccessfully trying to fake listing several paths with a with a pattern instead of a function",
     () => {
       let response;
-      When("we try to fake listing a path with a / in the pattern", () => {
+      When("we try to fake listing a path with a with a pattern instead of a function", () => {
         try {
           fakeSftp.listMany([
-            { expectedPath: path, expectedPattern: "/", files },
+            { expectedPath: path, expectedPattern: "/something/", files },
           ]);
         } catch (error) {
           response = error;
         }
       });
-      Then("we should get an error about / in the path", () => {
+      Then("we should get an error about pattern not being a function", () => {
         response.message.should.eql(
-          "expected pattern / includes a '/', but that isn't supported by the real sftp client"
+          "expected pattern /something/ needs to be a function"
         );
       });
     }

@@ -477,61 +477,45 @@ Feature("fake-sftp list feature", () => {
     }
   );
 
-  Scenario(
-    "unsuccessfully fake listing several paths, pattern doesn't match expected",
-    () => {
-      Given("we fake listing some path", () => {
-        fakeSftp.listMany([
-          { expectedPath: path, expectedPattern: filePattern, files },
-        ]);
-      });
-      let client;
-      And("we can connect to an sftp", async () => {
-        client = new SftpClient();
-        await client.connect(sftpConfig);
-      });
-      let response;
-      When("listing a path on the sftp", async () => {
-        try {
-          await client.list(path, "fish");
-        } catch (error) {
-          response = error;
-        }
-      });
-      Then("we should get an error about mismatching patterns", () => {
-        response.message.should.eql(
-          `expected pattern ${filePattern} but got fish`
-        );
-      });
-    }
+  Scenario("unsuccessfully fake listing several paths, no files matching", () => {
+    Given("we fake listing some path", () => {
+      fakeSftp.listMany([
+        { expectedPath: path, expectedPattern: filePattern, files },
+      ]);
+    });
+    let client;
+    And("we can connect to an sftp", async () => {
+      client = new SftpClient();
+      await client.connect(sftpConfig);
+    });
+    let response;
+    When("listing a path on the sftp", async () => {
+      response = await client.list(path, ({ name }) => name === "fish");
+    });
+    Then("we should get an empty array back", () => {
+      response.should.eql([]);
+    });
+  }
   );
 
-  Scenario(
-    "unsuccessfully fake listing several paths, pattern doesn't match expected, using regexp",
-    () => {
-      Given("we fake listing some path", () => {
-        fakeSftp.listMany([
-          { expectedPath: path, expectedPattern: filePattern, files },
-        ]);
-      });
-      let client;
-      And("we can connect to an sftp", async () => {
-        client = new SftpClient();
-        await client.connect(sftpConfig);
-      });
-      let response;
-      When("listing a path on the sftp", async () => {
-        try {
-          await client.list(path, /fish/);
-        } catch (error) {
-          response = error;
-        }
-      });
-      Then("we should get an error about mismatching patterns", () => {
-        response.message.should.eql(
-          `expected pattern ${filePattern} but got /fish/`
-        );
-      });
-    }
+  Scenario("unsuccessfully fake listing several paths, pattern doesn't match expected, no files matching", () => {
+    Given("we fake listing some path", () => {
+      fakeSftp.listMany([
+        { expectedPath: path, expectedPattern: filePattern, files },
+      ]);
+    });
+    let client;
+    And("we can connect to an sftp", async () => {
+      client = new SftpClient();
+      await client.connect(sftpConfig);
+    });
+    let response;
+    When("listing a path on the sftp", async () => {
+      response = await client.list(path, ({ name }) => name === "fish");
+    });
+    Then("we should get an empty array back", () => {
+      response.should.eql([]);
+    });
+  }
   );
 });

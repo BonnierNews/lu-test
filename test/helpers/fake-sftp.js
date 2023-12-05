@@ -185,9 +185,10 @@ export function listMany(expectedPaths) {
       mockedPaths[actualPath],
       `expected paths ${Object.keys(mockedPaths)} but got ${actualPath}`
     );
-    assert(actualPattern === mockedPaths[actualPath].expectedPattern, `expected pattern ${mockedPaths[actualPath].expectedPattern} but got ${actualPattern}`);
+    let matchedFiles = mockedPaths[actualPath].files;
+    if (actualPattern) matchedFiles = matchedFiles.filter((file) => actualPattern(file));
     return new Promise((resolve) => {
-      return resolve(mockedPaths[actualPath].files);
+      return resolve(matchedFiles);
     });
   };
 }

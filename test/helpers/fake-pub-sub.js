@@ -1,6 +1,6 @@
 import { createSandbox } from "sinon";
 import { PubSub } from "@google-cloud/pubsub";
-import request from "supertest";
+import supertest from "supertest";
 import config from "exp-config";
 
 const sandbox = createSandbox();
@@ -15,8 +15,10 @@ function init() {
   }
 }
 
+let requestAgent;
 export function enablePublish(broker) {
   init();
+  requestAgent = supertest.agent(broker);
   stub.topic = (topic) => {
     return {
       publishMessage: async (message) => {
@@ -50,7 +52,13 @@ async function publish(app, messageData, attributes) {
     },
     subscription: "some-cool-subscription",
   };
-  return await request(app).post("/message").send(message);
+  try {
+    return await requestAgent.post("/message").send(message).retry(5);
+    /* c8 ignore next 4 */
+  } catch (error) {
+    console.error("Error in fake-pub-sub :>> ", error); // eslint-disable-line no-console
+    throw error;
+  }
 }
 
 export function reset() {

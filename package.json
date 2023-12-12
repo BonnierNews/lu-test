@@ -4,7 +4,7 @@
   "description": "Test helpers.",
   "main": "index.js",
   "engines": {
-    "node": ">=16 <=20"
+    "node": ">=16"
   },
   "scripts": {
     "mocha": "mocha",

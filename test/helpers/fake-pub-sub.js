@@ -53,7 +53,7 @@ async function publish(app, messageData, attributes) {
     subscription: "some-cool-subscription",
   };
   try {
-    return await requestAgent.post("/message").send(message).retry(5);
+    return await requestAgent.post("/message").send(message);
     /* c8 ignore next 4 */
   } catch (error) {
     console.error("Error in fake-pub-sub :>> ", error); // eslint-disable-line no-console

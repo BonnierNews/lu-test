@@ -2,18 +2,12 @@ import { expect } from "chai";
 
 import * as fileUtils from "../helpers/file-utils.js";
 
-const expectedExports = [
-  "csvToJsonLines",
-  "jsonLinesToObjectArray",
-  "objectArrayToJsonLines",
-];
+const expectedExports = [ "csvToJsonLines", "jsonLinesToObjectArray", "objectArrayToJsonLines", "modifyFile" ];
 
-describe("fake-pub-sub exposed features", () => {
+describe("file-utils exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      expect(Object.keys(fileUtils).sort().join(",")).to.equal(
-        expectedExports.sort().join(",")
-      );
+      expect(Object.keys(fileUtils).sort().join(",")).to.equal(expectedExports.sort().join(","));
     });
   });
 });

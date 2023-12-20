@@ -2,10 +2,12 @@ import nock from "nock";
 import config from "exp-config";
 import stream from "stream";
 import zlib from "zlib";
+import path from "path";
+import fs from "fs";
 
 import clone from "./clone.js";
 
-export default function init(url = config.proxyUrl) {
+function init(url = config.gcpProxy?.url || config.proxyUrl || config.awsProxyUrl) {
   let api = nock(url);
 
   function reset() {
@@ -25,18 +27,18 @@ export default function init(url = config.proxyUrl) {
     if (Array.isArray(testData)) {
       return testData.map(mount);
     }
+    if (typeof testData === "string") {
+      testData = require("test-data")(testData);
+    }
     let actualBody;
     const { request } = testData;
-    if (request.baseUrl && request.baseUrl !== url) {
-      throw new Error(`Mismatching urls ${request.baseUrl} ${url}`);
-    }
+    if (request.baseUrl && request.baseUrl !== url) throw new Error(`Mismatching urls ${request.baseUrl} ${url}`);
     const mock = api[request.method.toLowerCase()](request.path, (body) => {
       actualBody = body;
       return true;
     });
 
-    const numTimes = times || testData.times;
-    if (numTimes) mock.times(numTimes);
+    if (times || testData.times) mock.times(times || testData.times);
 
     if (request.query) {
       mock.query(request.query);
@@ -48,27 +50,19 @@ export default function init(url = config.proxyUrl) {
       }
     }
 
+    if (url === config.gcpProxy?.url) mock.matchHeader("Authorization", /Bearer .*/);
+
     const statusCode = testData.statusCode ?? testData.status ?? 200;
+    const responseBody = typeof testData.body === "object" ? JSON.stringify(testData.body) : testData.body;
     if (testData.stream && testData.compress) {
-      const body =
-        typeof testData.body === "object"
-          ? JSON.stringify(testData.body)
-          : testData.body;
-      mock.reply(
-        statusCode,
-        stream.Readable.from([ body ]).pipe(zlib.createGzip())
-      );
+      mock.reply(statusCode, stream.Readable.from([ responseBody ]).pipe(zlib.createGzip()));
     } else if (testData.stream) {
-      const body =
-        typeof testData.body === "object"
-          ? JSON.stringify(testData.body)
-          : testData.body;
-      mock.reply(statusCode, stream.Readable.from([ body ]), {
-        "content-length": body.length,
+      mock.reply(statusCode, stream.Readable.from([ responseBody ]), {
+        "content-length": responseBody.length,
         ...testData.headers,
       });
     } else {
-      mock.reply(statusCode, testData.body, testData.headers || undefined);
+      mock.reply(statusCode, responseBody, testData.headers || undefined);
     }
 
     return {
@@ -85,12 +79,13 @@ export default function init(url = config.proxyUrl) {
     };
   }
 
+  function mountFolder(folderName) {
+    const dirName = path.join(path.dirname(require.resolve("test-data")), folderName);
+    return fs.readdirSync(dirName).map((fileName) => mount(path.join(folderName, fileName)));
+  }
+
   function fakePrefixedResource(prefix, content, times = 1) {
-    return fakeJsonResponse(
-      `${prefix}/${content.type}/${content.id}`,
-      content,
-      times
-    );
+    return fakeJsonResponse(`${prefix}/${content.type}/${content.id}`, content, times);
   }
 
   function fakeJsonResponse(apiPath, content, times = 1, status = 200) {
@@ -112,9 +107,7 @@ export default function init(url = config.proxyUrl) {
 
   function mountExternal(external) {
     if (!external) {
-      throw new Error(
-        "Could not mount, provided object is empty or missing external property"
-      );
+      throw new Error("Could not mount, provided object is empty or missing external property");
     }
 
     const mounts = Object.values(external).map((value) => {
@@ -133,15 +126,25 @@ export default function init(url = config.proxyUrl) {
     fakeResources,
     fakeResource,
     filteringPath: api.filteringPath.bind(api),
-    get: api.get.bind(api),
-    post: api.post.bind(api),
-    put: api.put.bind(api),
-    delete: api.delete.bind(api),
-    patch: api.patch.bind(api),
+    get: url === config.gcpProxy?.url ? api.matchHeader("Authorization", /Bearer .*/).get.bind(api) : api.get.bind(api),
+    post:
+      url === config.gcpProxy?.url ? api.matchHeader("Authorization", /Bearer .*/).post.bind(api) : api.post.bind(api),
+    put: url === config.gcpProxy?.url ? api.matchHeader("Authorization", /Bearer .*/).put.bind(api) : api.put.bind(api),
+    delete:
+      url === config.gcpProxy?.url
+        ? api.matchHeader("Authorization", /Bearer .*/).delete.bind(api)
+        : api.delete.bind(api),
+    patch:
+      url === config.gcpProxy?.url
+        ? api.matchHeader("Authorization", /Bearer .*/).patch.bind(api)
+        : api.patch.bind(api),
     mount,
+    mountFolder,
     pendingMocks: api.pendingMocks.bind(api),
     matchHeader: api.matchHeader.bind(api),
     reset,
     mountExternal,
   };
 }
+
+export default init;

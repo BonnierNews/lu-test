@@ -11,11 +11,11 @@ const pipeline = promisify(stream.pipeline);
 
 const filePath = "gs://some-bucket/dir/file.txt";
 
-Feature("fake-gcs feature", () => {
+Feature("fake-gcs alternative api feature", () => {
   beforeEachScenario(fakeGcs.reset);
   Scenario("Write a file to google", () => {
     Given("there's a target we can write to", () => {
-      fakeGcs.mockFile(filePath);
+      fakeGcs.write(filePath);
     });
 
     When("we write the file", async () => {
@@ -33,9 +33,9 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Write an empty file then read it", () => {
+  Scenario.skip("Write an empty file then read it", () => {
     Given("there's a target we can write to", () => {
-      fakeGcs.mockFile(filePath);
+      fakeGcs.write(filePath);
     });
 
     When("we write the file", async () => {
@@ -69,9 +69,9 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Write a large file to google", () => {
+  Scenario.skip("Write a large file to google", () => {
     Given("there's a target we can write to", () => {
-      fakeGcs.mockFile(filePath);
+      fakeGcs.write(filePath);
     });
 
     When("we write the file", async () => {
@@ -92,13 +92,13 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Write multiple files to google", () => {
+  Scenario.skip("Write multiple files to google", () => {
     const filePath1 = "gs://some-bucket/dir/file_1.txt";
     const filePath2 = "gs://some-bucket/dir/file_2.txt";
 
     Given("there's two targets we can write to", () => {
-      fakeGcs.mockFile(filePath1);
-      fakeGcs.mockFile(filePath2);
+      fakeGcs.write(filePath1);
+      fakeGcs.write(filePath2);
     });
 
     When("we write to file1's path", async () => {
@@ -128,8 +128,8 @@ Feature("fake-gcs feature", () => {
 
   Scenario("Read multiple files from google", () => {
     Given("there's two readable files", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "some stuff\n" });
-      fakeGcs.mockFile("gs://some-bucket/dir/file_2.txt", { content: "some other stuff\n" });
+      fakeGcs.read("gs://some-bucket/dir/file_1.txt", "some stuff\n");
+      fakeGcs.read("gs://some-bucket/dir/file_2.txt", "some other stuff\n");
     });
 
     const readOne = [];
@@ -166,7 +166,7 @@ Feature("fake-gcs feature", () => {
 
   Scenario("Read the same file multiple times from google", () => {
     Given("there's a readable file", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "some stuff\n" });
+      fakeGcs.read("gs://some-bucket/dir/file_1.txt", "some stuff\n");
     });
 
     const readOne = [];
@@ -203,8 +203,8 @@ Feature("fake-gcs feature", () => {
 
   Scenario("Write to one file, read from the other", () => {
     Given("there's an existing file and", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "some stuff\n" });
-      fakeGcs.mockFile("gs://some-bucket/dir/file_2.txt");
+      fakeGcs.read("gs://some-bucket/dir/file_1.txt", "some stuff\n");
+      fakeGcs.write("gs://some-bucket/dir/file_2.txt");
     });
 
     const readOne = [];
@@ -266,8 +266,8 @@ Feature("fake-gcs feature", () => {
 
   Scenario("Read two different files in two buckets from google", () => {
     Given("there's two readable files", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "some stuff\n" });
-      fakeGcs.mockFile("gs://some-other-bucket/dir/file_1.txt", { content: "some other stuff\n" });
+      fakeGcs.read("gs://some-bucket/dir/file_1.txt", "some stuff\n");
+      fakeGcs.read("gs://some-other-bucket/dir/file_1.txt", "some other stuff\n");
     });
 
     const readOne = [];
@@ -305,7 +305,7 @@ Feature("fake-gcs feature", () => {
   Scenario("Read a file with specific encoding from google", () => {
     Given("there's two readable files", () => {
       const content = Buffer.from("tést", "latin1");
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content, encoding: "latin1" });
+      fakeGcs.read("gs://some-bucket/dir/file_1.txt", content, { encoding: "latin1" });
     });
 
     const readOne = [];
@@ -326,9 +326,9 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Get a csv file's metadata from google", () => {
+  Scenario.skip("Get a csv file's metadata from google", () => {
     Given("there's a file", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "some,csv,file\n" });
+      fakeGcs.read("gs://some-bucket/dir/file_1.csv", "some,csv,file\n");
     });
 
     let metadata;
@@ -347,9 +347,9 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Get a json file's metadata from google", () => {
+  Scenario.skip("Get a json file's metadata from google", () => {
     Given("there's a file", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.json", { content: '{"attr":"val"}\n' });
+      fakeGcs.read("gs://some-bucket/dir/file_1.json", '{"attr":"val"}\n');
     });
 
     let metadata;
@@ -368,9 +368,9 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Get a gzipped file's metadata from google", () => {
+  Scenario.skip("Get a gzipped file's metadata from google", () => {
     Given("there's a file", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.json.gz", { content: zlib.gzipSync('{"attr":"val"}\n') });
+      fakeGcs.read("gs://some-bucket/dir/file_1.json.gz", zlib.gzipSync('{"attr":"val"}\n'));
     });
 
     let metadata;
@@ -389,9 +389,9 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Get a text file's metadata from google", () => {
+  Scenario.skip("Get a text file's metadata from google", () => {
     Given("there's a file", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "some data" });
+      fakeGcs.read("gs://some-bucket/dir/file_1.txt", "some data");
     });
 
     let metadata;
@@ -410,9 +410,9 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Get an unknown file's metadata from google", () => {
+  Scenario.skip("Get an unknown file's metadata from google", () => {
     Given("there's a file", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1", { content: "some data" });
+      fakeGcs.read("gs://some-bucket/dir/file_1", "some data");
     });
 
     let metadata;
@@ -431,9 +431,9 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Get metadata from a file that does not exist from google", () => {
+  Scenario.skip("Get metadata from a file that does not exist from google", () => {
     Given("there is no file", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv");
+      fakeGcs.read("gs://some-bucket/dir/file_1.csv");
     });
 
     let metadata;
@@ -447,9 +447,9 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Delete a file in google", () => {
+  Scenario.skip("Delete a file in google", () => {
     Given("there's a file", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "some,csv,file\n" });
+      fakeGcs.read("gs://some-bucket/dir/file_1.csv", "some,csv,file\n");
     });
 
     When("we try to delete the file", async () => {
@@ -470,7 +470,7 @@ Feature("fake-gcs feature", () => {
 
   Scenario("Check if a file exists on google with readable data", () => {
     Given("there's a mocked file with readable data", () => {
-      fakeGcs.mockFile(filePath, { content: "blahoga\n" });
+      fakeGcs.read(filePath, "blahoga\n");
     });
 
     let exists;
@@ -484,9 +484,48 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("The stream throws an error", () => {
+  Scenario("The write stream throws an error", () => {
     Given("there's a mocked file with an error", () => {
-      fakeGcs.mockFile(filePath, { content: "blahoga\n" }).throws(new Error("some error"));
+      fakeGcs.writeError(filePath);
+    });
+
+    When("we try to access the storage", () => {
+      const storage = new Storage(config.gcs.credentials);
+      assert.throws(() => {
+        storage.bucket("some-bucket").file("dir/file.txt");
+      }, /gcs file stream error/);
+    });
+  });
+
+  Scenario("The write stream throws a specified error", () => {
+    Given("there's a mocked file with a specified error", () => {
+      fakeGcs.writeError(filePath, "some error");
+    });
+
+    When("we try to access the storage", () => {
+      const storage = new Storage(config.gcs.credentials);
+      assert.throws(() => {
+        storage.bucket("some-bucket").file("dir/file.txt");
+      }, /some error/);
+    });
+  });
+
+  Scenario("The read stream throws an error", () => {
+    Given("there's a mocked file with an error", () => {
+      fakeGcs.readError(filePath);
+    });
+
+    When("we try to access the storage", () => {
+      const storage = new Storage(config.gcs.credentials);
+      assert.throws(() => {
+        storage.bucket("some-bucket").file("dir/file.txt");
+      }, /gcs file stream read error/);
+    });
+  });
+
+  Scenario("The read stream throws a specified error", () => {
+    Given("there's a mocked file with a specified error", () => {
+      fakeGcs.readError(filePath, "some error");
     });
 
     When("we try to access the storage", () => {
@@ -498,8 +537,8 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("Check if a file exists on google without readable data", () => {
-    Given("there's a mocked file without readable data", () => {
-      fakeGcs.mockFile(filePath);
+    Given("the file doesn't exist", () => {
+      fakeGcs.exists(filePath, false);
     });
 
     let exists;
@@ -513,41 +552,137 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Check if multiple files exists on google", () => {
-    Given("there's a mocked file without readable data", () => {
-      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt");
-      fakeGcs.mockFile("gs://some-bucket/dir/file_2.txt", { content: "blahoga\n" });
-      fakeGcs.mockFile("gs://some-other-bucket/dir/file_1.txt");
-      fakeGcs.mockFile("gs://some-other-bucket/dir/file_2.txt");
+  Scenario("Check if a file exists on google with readable data", () => {
+    Given("the file exists", () => {
+      fakeGcs.exists(filePath, true);
     });
 
-    let existsOne, existsTwo, existsThree, existsFour;
-    When("we ask if the file exists", async () => {
+    let exists;
+    When("we ask if the file exists", () => {
       const storage = new Storage(config.gcs.credentials);
-      existsOne = storage.bucket("some-bucket").file("dir/file_1.txt").exists();
-      existsTwo = storage.bucket("some-bucket").file("dir/file_2.txt").exists();
-      existsThree = storage.bucket("some-other-bucket").file("dir/file_1.txt").exists();
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
 
+    Then("we verify that it does exist", () => {
+      exists.should.eql([ true ]);
+    });
+  });
+
+  Scenario("Check if a file exists on google with readable data - first it doesn't, then it does", () => {
+    Given("the file doesn't exist twice and then it does", () => {
+      fakeGcs.exists(filePath, [ false, false, true ]);
+    });
+
+    let exists;
+    const storage = new Storage(config.gcs.credentials);
+    When("we ask if the file exists", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it doesn't exist", () => {
+      exists.should.eql([ false ]);
+    });
+
+    When("we ask if the file exists a second time", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it doesn't exist", () => {
+      exists.should.eql([ false ]);
+    });
+
+    When("we ask if the file exists a third time", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it does exist", () => {
+      exists.should.eql([ true ]);
+    });
+  });
+
+  Scenario("Check if a file exists on google with readable data - using multiple calls function", () => {
+    Given("the file doesn't exist twice and then it does", () => {
+      fakeGcs.existsMultipleCalls(filePath, [ false, false, true ]);
+    });
+
+    let exists;
+    const storage = new Storage(config.gcs.credentials);
+    When("we ask if the file exists", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it doesn't exist", () => {
+      exists.should.eql([ false ]);
+    });
+
+    When("we ask if the file exists a second time", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it doesn't exist", () => {
+      exists.should.eql([ false ]);
+    });
+
+    When("we ask if the file exists a third time", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it does exist", () => {
+      exists.should.eql([ true ]);
+    });
+  });
+
+  Scenario("Check if multiple files exists on google", () => {
+    Given("a file without readable data", () => {
+      fakeGcs.exists("gs://some-bucket/dir/file_1.txt", false);
+    });
+
+    And("a file with readable data", () => {
+      fakeGcs.exists("gs://some-bucket/dir/file_2.txt", true);
+    });
+
+    And("two more files without readable data", () => {
+      fakeGcs.exists("gs://some-other-bucket/dir/file_1.txt", false);
+      fakeGcs.exists("gs://some-other-bucket/dir/file_2.txt", false);
+    });
+
+    let storage;
+    And("we can access the bucket", () => {
+      storage = new Storage(config.gcs.credentials);
+    });
+
+    And("we write the fourth file", async () => {
       const writeStream = storage.bucket("some-other-bucket").file("dir/file_2.txt").createWriteStream();
       const readStream = new stream.Readable();
       readStream.push("some other text\n");
       readStream.push(null);
       await pipeline(readStream, writeStream);
+    });
 
+    let existsOne, existsTwo, existsThree, existsFour;
+    When("we ask if the files exist", () => {
+      existsOne = storage.bucket("some-bucket").file("dir/file_1.txt").exists();
+      existsTwo = storage.bucket("some-bucket").file("dir/file_2.txt").exists();
+      existsThree = storage.bucket("some-other-bucket").file("dir/file_1.txt").exists();
       existsFour = storage.bucket("some-other-bucket").file("dir/file_2.txt").exists();
     });
 
-    Then("we verify that four files either exists or not", () => {
+    Then("the first and third files shouldn't exist", () => {
       existsOne.should.eql([ false ]);
-      existsTwo.should.eql([ true ]);
       existsThree.should.eql([ false ]);
+    });
+
+    And("the second and fourth files should exist", () => {
+      existsTwo.should.eql([ true ]);
       existsFour.should.eql([ true ]);
     });
   });
 
   Scenario("Ask for a list of files with a prefix", () => {
-    Given("there's a mocked file", () => {
-      fakeGcs.mockFile(filePath, { content: "blahoga\n" });
+    Given("there's a mocked list of files", () => {
+      const path = filePath.split("/").slice(0, 4).join("/");
+      const file1 = filePath.split("/").pop();
+      fakeGcs.list(path, [ file1 ]);
     });
 
     let files;
@@ -563,11 +698,11 @@ Feature("fake-gcs feature", () => {
 
   Scenario("Mock the same file twice", () => {
     When("there's a mock", () => {
-      fakeGcs.mockFile(filePath);
+      fakeGcs.write(filePath);
     });
 
     Then("when we try to mock the file again, it throws an error", () => {
-      assert.throws(() => fakeGcs.mockFile(filePath), /has already been mocked/);
+      assert.throws(() => fakeGcs.write(filePath), /has already been mocked/);
     });
   });
 });

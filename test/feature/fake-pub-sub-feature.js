@@ -12,12 +12,10 @@ const expectedExports = [
   "triggerMessage",
 ];
 
-describe("Exposed features", () => {
+describe("fake-pub-sub exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      expect(Object.keys(fakePubSub).sort().join(",")).to.equal(
-        expectedExports.sort().join(",")
-      );
+      expect(Object.keys(fakePubSub).sort().join(",")).to.equal(expectedExports.sort().join(","));
     });
   });
 });
@@ -81,17 +79,13 @@ Feature("fake-pub-sub feature", () => {
     });
     let response;
     When("triggering a message with a buffer", async () => {
-      response = await fakePubSub.triggerMessage(
-        app,
-        Buffer.from(JSON.stringify(message.json)),
-        message.attributes
-      );
+      response = await fakePubSub.triggerMessage(app, Buffer.from(JSON.stringify(message.json)), message.attributes);
     });
     Then("we should receive a 200, Ok", () => {
       response.statusCode.should.eql(200, response.text);
     });
     And("we should receive an empty body", () => {
-      response.body.should.eql({ });
+      response.body.should.eql({});
     });
   });
 });

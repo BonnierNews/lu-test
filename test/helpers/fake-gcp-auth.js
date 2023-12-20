@@ -11,18 +11,20 @@ function init() {
   }
 }
 
-export function authenticated() {
+function authenticated() {
   init();
-  stub.getIdTokenClient = () => {
+  stub.getIdTokenClient = (audience = "some-gcp-token") => {
     return {
       getRequestHeaders: () => {
-        return { Authorization: "Bearer some-gcp-token" };
+        return { Authorization: `Bearer ${audience}` };
       },
     };
   };
 }
 
-export function reset() {
+function reset() {
   sandbox.restore();
   stub = null;
 }
+
+export { authenticated, reset };

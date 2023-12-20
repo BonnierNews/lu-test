@@ -25,9 +25,7 @@ const expectedExports = [
 describe("Exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      expect(Object.keys(helpers).sort().join(",")).to.equal(
-        expectedExports.sort().join(",")
-      );
+      expect(Object.keys(helpers).sort().join(",")).to.equal(expectedExports.sort().join(","));
     });
   });
 });

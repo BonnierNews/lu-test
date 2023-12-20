@@ -20,10 +20,7 @@ function init() {
 
 function get(expectedPath, content) {
   stub.get = (actualPath, writeStream) => {
-    assert(
-      expectedPath === actualPath,
-      `expected path ${expectedPath} but got ${actualPath}`
-    );
+    assert(expectedPath === actualPath, `expected path ${expectedPath} but got ${actualPath}`);
     if (!writeStream) {
       // if the is no witeStream return content as a buffer
       const buffer = Buffer.from(content);
@@ -36,7 +33,7 @@ function get(expectedPath, content) {
   };
 }
 
-export function getAsStream(expectedPath, content) {
+function getAsStream(expectedPath, content) {
   init();
   stub.connect = () => {
     return;
@@ -45,14 +42,15 @@ export function getAsStream(expectedPath, content) {
 }
 
 function getMany(expectedFiles) {
+  init();
+  stub.connect = () => {
+    return;
+  };
   const expectedPaths = Object.keys(expectedFiles);
   stub.get = (actualPath, writeStream) => {
-    assert(
-      expectedPaths.includes(actualPath),
-      `expected paths ${expectedPaths.join(", ")} to include ${actualPath}`
-    );
+    assert(expectedPaths.includes(actualPath), `expected paths ${expectedPaths.join(", ")} to include ${actualPath}`);
     if (!writeStream) {
-      // if there is no writeStream return content as a buffer
+      // if the is no writeStream return content as a buffer
       const buffer = Buffer.from(expectedFiles[actualPath]);
       return new Promise((resolve) => {
         return resolve(buffer);
@@ -63,7 +61,7 @@ function getMany(expectedFiles) {
   };
 }
 
-export function getManyAsStream(expectedFiles) {
+function getManyAsStream(expectedFiles) {
   init();
   stub.connect = () => {
     return;
@@ -71,7 +69,7 @@ export function getManyAsStream(expectedFiles) {
   getMany(expectedFiles);
 }
 
-export function copy(expectedSourcePath, expectedTargetPath, content) {
+function copy(expectedSourcePath, expectedTargetPath, content) {
   init();
   assert(content, "No content supplied");
 
@@ -80,10 +78,7 @@ export function copy(expectedSourcePath, expectedTargetPath, content) {
   };
   get(expectedSourcePath, content);
   stub.put = (buffer, actualTarget) => {
-    assert(
-      expectedTargetPath === actualTarget,
-      `expected path ${expectedTargetPath} but got ${actualTarget}`
-    );
+    assert(expectedTargetPath === actualTarget, `expected path ${expectedTargetPath} but got ${actualTarget}`);
     return new Promise((resolve) => {
       writes[actualTarget] = buffer;
       return resolve();
@@ -91,7 +86,7 @@ export function copy(expectedSourcePath, expectedTargetPath, content) {
   };
 }
 
-export function put(expectedTargetPath) {
+function put(expectedTargetPath) {
   init();
   stub.connect = () => {
     return;
@@ -99,10 +94,7 @@ export function put(expectedTargetPath) {
   stub.put = (readStream, actualTarget) => {
     targetPath = actualTarget;
     if (expectedTargetPath) {
-      assert(
-        expectedTargetPath === actualTarget,
-        `expected path ${expectedTargetPath} but got ${actualTarget}`
-      );
+      assert(expectedTargetPath === actualTarget, `expected path ${expectedTargetPath} but got ${actualTarget}`);
     }
     return new Promise((resolve) => {
       const writer = es.wait((_, data) => {
@@ -114,7 +106,7 @@ export function put(expectedTargetPath) {
   };
 }
 
-export function putMany(expectedTargetPaths) {
+function putMany(expectedTargetPaths) {
   init();
   stub.connect = () => {
     return;
@@ -122,9 +114,7 @@ export function putMany(expectedTargetPaths) {
   stub.put = (readStream, actualTarget) => {
     assert(
       expectedTargetPaths.includes(actualTarget),
-      `expected paths ${expectedTargetPaths.join(
-        ", "
-      )} to include ${actualTarget}`
+      `expected paths ${expectedTargetPaths.join(", ")} to include ${actualTarget}`
     );
     return new Promise((resolve) => {
       const writer = es.wait((_, data) => {
@@ -136,7 +126,7 @@ export function putMany(expectedTargetPaths) {
   };
 }
 
-export function putError(message = "sftp put failed") {
+function putError(message = "sftp put failed") {
   init();
   stub.connect = () => {
     return;
@@ -146,7 +136,7 @@ export function putError(message = "sftp put failed") {
   };
 }
 
-export function list(expectedPath, expectedPattern, files) {
+function list(expectedPath, expectedPattern, files) {
   if (expectedPattern) {
     assert(typeof expectedPattern === "function", `expected pattern ${expectedPattern} needs to be a function`);
   }
@@ -165,14 +155,17 @@ export function list(expectedPath, expectedPattern, files) {
   };
 }
 
-export function listMany(expectedPaths) {
+function listMany(expectedPaths) {
   init();
   stub.connect = () => {
     return;
   };
   expectedPaths.map((path) => {
     if (path.expectedPattern) {
-      assert(typeof path.expectedPattern === "function", `expected pattern ${path.expectedPattern} needs to be a function`);
+      assert(
+        typeof path.expectedPattern === "function",
+        `expected pattern ${path.expectedPattern} needs to be a function`
+      );
     }
     mockedPaths[path.expectedPath] = {
       expectedPattern: path.expectedPattern,
@@ -180,10 +173,7 @@ export function listMany(expectedPaths) {
     };
   });
   stub.list = (actualPath, actualPattern) => {
-    assert(
-      mockedPaths[actualPath],
-      `expected paths ${Object.keys(mockedPaths)} but got ${actualPath}`
-    );
+    assert(mockedPaths[actualPath], `expected paths ${Object.keys(mockedPaths)} but got ${actualPath}`);
     let matchedFiles = mockedPaths[actualPath].files;
     if (actualPattern) matchedFiles = matchedFiles.filter((file) => actualPattern(file));
     return new Promise((resolve) => {
@@ -192,7 +182,7 @@ export function listMany(expectedPaths) {
   };
 }
 
-export function remove(expectedPath) {
+function remove(expectedPath) {
   init();
   stub.connect = () => {
     return;
@@ -209,32 +199,32 @@ export function remove(expectedPath) {
   };
 }
 
-export function connectionError(message = "sftp connection failed") {
+function connectionError(message = "sftp connection failed") {
   init();
   stub.connect = () => {
     throw new Error(message);
   };
 }
 
-export function written(path) {
+function written(path) {
   if (Buffer.isBuffer(writes[path])) {
     return writes[path].toString();
   }
   return writes[path];
 }
 
-export function writtenAsBuffer(path) {
+function writtenAsBuffer(path) {
   if (Buffer.isBuffer(writes[path])) {
     return writes[path];
   }
   return Buffer.from(writes[path]);
 }
 
-export function removed(path) {
+function removed(path) {
   return removes[path];
 }
 
-export function reset() {
+function reset() {
   writes = {};
   removes = {};
   sandbox.restore();
@@ -242,23 +232,39 @@ export function reset() {
   expectedExistPaths = {};
 }
 
-export function exists(expectedPath, fileExists) {
+function exists(expectedPath, fileExists) {
   expectedExistPaths[expectedPath] = fileExists;
   init();
   stub.connect = () => {
     return;
   };
   stub.exists = (actualPath) => {
-    assert(
-      Object.keys(expectedExistPaths).includes(actualPath),
-      `SFTP exists for path ${actualPath} was not expected`
-    );
+    assert(Object.keys(expectedExistPaths).includes(actualPath), `SFTP exists for path ${actualPath} was not expected`);
     return new Promise((resolve) => {
       return resolve(expectedExistPaths[actualPath]);
     });
   };
 }
 
-export function getTargetPath() {
+function getTargetPath() {
   return targetPath;
 }
+
+export {
+  copy,
+  getAsStream,
+  getManyAsStream,
+  getTargetPath,
+  connectionError,
+  written,
+  writtenAsBuffer,
+  remove,
+  removed,
+  reset,
+  put,
+  putMany,
+  putError,
+  list,
+  listMany,
+  exists,
+};

@@ -4,21 +4,12 @@ import { Readable } from "stream";
 
 import * as fakeFTP from "../helpers/fake-ftp.js";
 
-const expectedExports = [
-  "connectionError",
-  "put",
-  "putError",
-  "putMany",
-  "reset",
-  "written",
-];
+const expectedExports = [ "connectionError", "put", "putError", "putMany", "reset", "written" ];
 
-describe("fake-pub-sub exposed features", () => {
+describe("fake-ftp exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      expect(Object.keys(fakeFTP).sort().join(",")).to.equal(
-        expectedExports.sort().join(",")
-      );
+      expect(Object.keys(fakeFTP).sort().join(",")).to.equal(expectedExports.sort().join(","));
     });
   });
 });

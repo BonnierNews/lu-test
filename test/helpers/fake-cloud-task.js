@@ -14,7 +14,7 @@ function init() {
   }
 }
 
-export function enablePublish(broker) {
+function enablePublish(broker) {
   init();
   stub.queuePath = () => "fix-me";
   stub.createTask = async ({ task }) => {
@@ -30,7 +30,7 @@ export function enablePublish(broker) {
   };
 }
 
-export function fakeCreateTaskError() {
+function fakeCreateTaskError() {
   init();
   stub.queuePath = () => "fix-me";
   stub.createTask = () => {
@@ -38,16 +38,19 @@ export function fakeCreateTaskError() {
   };
 }
 
-export function reset() {
+function reset() {
   messages = [];
   messageHandlerResponses = [];
   sandbox.restore();
   stub = null;
 }
 
-export function recordedMessages() {
+function recordedMessages() {
   return messages;
 }
-export function recordedMessageHandlerResponses() {
+
+function recordedMessageHandlerResponses() {
   return messageHandlerResponses;
 }
+
+export { enablePublish, fakeCreateTaskError, reset, recordedMessages, recordedMessageHandlerResponses };

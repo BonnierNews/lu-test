@@ -11,19 +11,13 @@ function initRecipes(recipes) {
   const lambdaMap = {};
 
   const useParentCorrelationIdMap = {};
-  recipes.forEach(
-    (r) =>
-      (useParentCorrelationIdMap[`trigger.${r.namespace}.${r.name}`] =
-        r.useParentCorrelationId)
-  );
+  recipes.forEach((r) => (useParentCorrelationIdMap[`trigger.${r.namespace}.${r.name}`] = r.useParentCorrelationId));
 
   recipes.forEach((recipe) => {
     const prefix = `${recipe.namespace}.${recipe.name}`;
     recipe.sequence.forEach((step, idx) => {
       const [ key ] = Object.keys(step);
-      const [ next ] = recipe.sequence[idx + 1]
-        ? Object.keys(recipe.sequence[idx + 1])
-        : [ ".processed" ];
+      const [ next ] = recipe.sequence[idx + 1] ? Object.keys(recipe.sequence[idx + 1]) : [ ".processed" ];
       if (next !== ".processed" || recipe.name !== "broken-sequence") {
         recipeMap[`${prefix}${key}`] = `${prefix}${next}`;
       }

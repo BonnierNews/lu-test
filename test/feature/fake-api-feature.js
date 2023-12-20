@@ -27,14 +27,13 @@ const expectedExports = [
   "matchHeader",
   "reset",
   "mountExternal",
+  "mountFolder",
 ];
 
 describe("fake-api exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      expect(Object.keys(fakeApi).sort().join(",")).to.equal(
-        expectedExports.sort().join(",")
-      );
+      expect(Object.keys(fakeApi).sort().join(",")).to.equal(expectedExports.sort().join(","));
     });
   });
 });
@@ -64,9 +63,7 @@ Feature("fake-api net connect feature", () => {
       }
     });
     Then("nock should say that net connect is disallowed", () => {
-      response.message.should.eql(
-        'Nock: Disallowed net connect for "example.com:80/"'
-      );
+      response.message.should.eql('Nock: Disallowed net connect for "example.com:80/"');
     });
   });
 });
@@ -86,16 +83,12 @@ Feature("fake-api json response feature", () => {
     And("the interceptor should be for the correct URL", () => {
       Object.keys(response.keyedInterceptors)[0].should.eql(`GET ${url}`);
     });
-    And(
-      "the body, number of times and statusCode should be as expected",
-      () => {
-        const { body, counter, statusCode } =
-          response.keyedInterceptors[`GET ${url}`][0];
-        body.should.eql(JSON.stringify(content));
-        counter.should.eql(times);
-        statusCode.should.eql(200);
-      }
-    );
+    And("the body, number of times and statusCode should be as expected", () => {
+      const { body, counter, statusCode } = response.keyedInterceptors[`GET ${url}`][0];
+      body.should.eql(JSON.stringify(content));
+      counter.should.eql(times);
+      statusCode.should.eql(200);
+    });
   });
 
   Scenario("fake not existing", () => {
@@ -110,16 +103,12 @@ Feature("fake-api json response feature", () => {
     And("the interceptor should be for the correct URL", () => {
       Object.keys(response.keyedInterceptors)[0].should.eql(`GET ${url}`);
     });
-    And(
-      "the body, number of times and statusCode should be as expected",
-      () => {
-        const { body, counter, statusCode } =
-          response.keyedInterceptors[`GET ${url}`][0];
-        body.should.eql(JSON.stringify(content));
-        counter.should.eql(times);
-        statusCode.should.eql(404);
-      }
-    );
+    And("the body, number of times and statusCode should be as expected", () => {
+      const { body, counter, statusCode } = response.keyedInterceptors[`GET ${url}`][0];
+      body.should.eql(JSON.stringify(content));
+      counter.should.eql(times);
+      statusCode.should.eql(404);
+    });
   });
 
   Scenario("fake not existing, without a body", () => {
@@ -134,16 +123,12 @@ Feature("fake-api json response feature", () => {
     And("the interceptor should be for the correct URL", () => {
       Object.keys(response.keyedInterceptors)[0].should.eql(`GET ${url}`);
     });
-    And(
-      "the body, number of times and statusCode should be as expected",
-      () => {
-        const { body, counter, statusCode } =
-          response.keyedInterceptors[`GET ${url}`][0];
-        body.should.eql("{}");
-        counter.should.eql(1);
-        statusCode.should.eql(404);
-      }
-    );
+    And("the body, number of times and statusCode should be as expected", () => {
+      const { body, counter, statusCode } = response.keyedInterceptors[`GET ${url}`][0];
+      body.should.eql("{}");
+      counter.should.eql(1);
+      statusCode.should.eql(404);
+    });
   });
 });
 
@@ -162,16 +147,12 @@ Feature("fake-api resource feature", () => {
     And("the interceptor should be for the correct URL", () => {
       Object.keys(response.keyedInterceptors)[0].should.eql(`GET ${url}`);
     });
-    And(
-      "the body, number of times and statusCode should be as expected",
-      () => {
-        const { body, counter, statusCode } =
-          response.keyedInterceptors[`GET ${url}`][0];
-        body.should.eql(JSON.stringify(content));
-        counter.should.eql(times);
-        statusCode.should.eql(200);
-      }
-    );
+    And("the body, number of times and statusCode should be as expected", () => {
+      const { body, counter, statusCode } = response.keyedInterceptors[`GET ${url}`][0];
+      body.should.eql(JSON.stringify(content));
+      counter.should.eql(times);
+      statusCode.should.eql(200);
+    });
   });
 
   Scenario("fake a prefixed resource", () => {
@@ -186,16 +167,12 @@ Feature("fake-api resource feature", () => {
     And("the interceptor should be for the correct URL", () => {
       Object.keys(response.keyedInterceptors)[0].should.eql(`GET ${url}`);
     });
-    And(
-      "the body, number of times and statusCode should be as expected",
-      () => {
-        const { body, counter, statusCode } =
-          response.keyedInterceptors[`GET ${url}`][0];
-        body.should.eql(JSON.stringify(content));
-        counter.should.eql(times);
-        statusCode.should.eql(200);
-      }
-    );
+    And("the body, number of times and statusCode should be as expected", () => {
+      const { body, counter, statusCode } = response.keyedInterceptors[`GET ${url}`][0];
+      body.should.eql(JSON.stringify(content));
+      counter.should.eql(times);
+      statusCode.should.eql(200);
+    });
   });
 
   Scenario("fake a resource the old way", () => {
@@ -345,20 +322,17 @@ Feature("fake-api mount feature", () => {
 
   Scenario("fake with a mount and a JSON body, compressing and streaming the response", () => {
     const url = `${config.proxyUrl}:80${path}`;
-    Given(
-      "we fake a resource using mount, compressing and streaming the response",
-      () => {
-        fakeApi.mount(
-          {
-            request: { method: "get", path },
-            stream: true,
-            compress: true,
-            body: { ...content },
-          },
-          times
-        );
-      }
-    );
+    Given("we fake a resource using mount, compressing and streaming the response", () => {
+      fakeApi.mount(
+        {
+          request: { method: "get", path },
+          stream: true,
+          compress: true,
+          body: { ...content },
+        },
+        times
+      );
+    });
     let response;
     When("trying to get a url as a stream", async () => {
       response = await axios.get(url, { responseType: "stream" });
@@ -379,20 +353,17 @@ Feature("fake-api mount feature", () => {
 
   Scenario("fake with a mount and a text body, compressing and streaming the response", () => {
     const url = `${config.proxyUrl}:80${path}`;
-    Given(
-      "we fake a resource using mount, compressing and streaming the response",
-      () => {
-        fakeApi.mount(
-          {
-            request: { method: "get", path },
-            stream: true,
-            compress: true,
-            body: JSON.stringify(content),
-          },
-          times
-        );
-      }
-    );
+    Given("we fake a resource using mount, compressing and streaming the response", () => {
+      fakeApi.mount(
+        {
+          request: { method: "get", path },
+          stream: true,
+          compress: true,
+          body: JSON.stringify(content),
+        },
+        times
+      );
+    });
     let response;
     When("trying to get a url as a stream", async () => {
       response = await axios.get(url, { responseType: "stream" });
@@ -456,9 +427,7 @@ Feature("fake-api external mount feature", () => {
       }
     });
     Then("we should receive an error about missing an object", () => {
-      mounts.message.should.eql(
-        "Could not mount, provided object is empty or missing external property"
-      );
+      mounts.message.should.eql("Could not mount, provided object is empty or missing external property");
     });
   });
 });

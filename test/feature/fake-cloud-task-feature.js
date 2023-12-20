@@ -15,9 +15,7 @@ const expectedExports = [
 describe("fake-cloud-task Exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      expect(Object.keys(fakeCloudTask).sort().join(",")).to.equal(
-        expectedExports.sort().join(",")
-      );
+      expect(Object.keys(fakeCloudTask).sort().join(",")).to.equal(expectedExports.sort().join(","));
     });
   });
 });
@@ -26,9 +24,7 @@ const message = {
   task: {
     httpRequest: {
       httpMethod: "post",
-      body: Buffer.from(
-        JSON.stringify({ type: "something", id: "some-id" })
-      ).toString("base64"),
+      body: Buffer.from(JSON.stringify({ type: "something", id: "some-id" })).toString("base64"),
     },
   },
 };
@@ -54,9 +50,7 @@ Feature("fake-cloud-task feature", () => {
     And("we should have recorded the message", () => {
       fakeCloudTask
         .recordedMessages()
-        .should.eql([
-          { httpMethod: "post", message: { type: "something", id: "some-id" } },
-        ]);
+        .should.eql([ { httpMethod: "post", message: { type: "something", id: "some-id" } } ]);
     });
     And("we should have recorded a message handler response", () => {
       fakeCloudTask.recordedMessageHandlerResponses().length.should.eql(1);

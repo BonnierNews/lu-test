@@ -8,9 +8,7 @@ import clone from "./clone.js";
 
 const proxyUrl = config.gcpProxy.url;
 
-/* c8 ignore start */
 function init(url = proxyUrl) {
-  /* c8 ignore stop */
   let api = nock(url);
 
   function reset() {

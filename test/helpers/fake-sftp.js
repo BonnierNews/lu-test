@@ -59,7 +59,6 @@ function getMany(expectedFiles) {
 
 function getManyAsStream(expectedFiles) {
   init();
-  stub.connect = () => {};
   getMany(expectedFiles);
 }
 

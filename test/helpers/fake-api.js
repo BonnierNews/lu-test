@@ -44,25 +44,33 @@ function init(url = config.gcpProxy?.url || config.proxyUrl || config.awsProxyUr
       mock.query(request.query);
     }
 
+    let hasContentType = false;
     if (request.headers) {
       for (const [ key, val ] of Object.entries(request.headers)) {
+        if (key.toLowerCase() === "content-type") hasContentType = true;
         mock.matchHeader(key, val);
       }
     }
+
+    const headers = testData.headers || {};
+    if (!hasContentType) headers["Content-Type"] = "application/json";
 
     if (url === config.gcpProxy?.url) mock.matchHeader("Authorization", /Bearer .*/);
 
     const statusCode = testData.statusCode ?? testData.status ?? 200;
     const responseBody = typeof testData.body === "object" ? JSON.stringify(testData.body) : testData.body;
     if (testData.stream && testData.compress) {
-      mock.reply(statusCode, stream.Readable.from([ responseBody ]).pipe(zlib.createGzip()));
+      mock.reply(statusCode, stream.Readable.from([ responseBody ]).pipe(zlib.createGzip()), {
+        "content-encoding": "gzip",
+        ...headers,
+      });
     } else if (testData.stream) {
       mock.reply(statusCode, stream.Readable.from([ responseBody ]), {
         "content-length": responseBody.length,
-        ...testData.headers,
+        ...headers,
       });
     } else {
-      mock.reply(statusCode, responseBody, testData.headers || undefined);
+      mock.reply(statusCode, responseBody, headers);
     }
 
     return {

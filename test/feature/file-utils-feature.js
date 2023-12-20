@@ -2,18 +2,12 @@ import { expect } from "chai";
 
 import * as fileUtils from "../helpers/file-utils.js";
 
-const expectedExports = [
-  "csvToJsonLines",
-  "jsonLinesToObjectArray",
-  "objectArrayToJsonLines",
-];
+const expectedExports = [ "csvToJsonLines", "jsonLinesToObjectArray", "objectArrayToJsonLines", "modifyFile" ];
 
-describe("fake-pub-sub exposed features", () => {
+describe("file-utils exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      expect(Object.keys(fileUtils).sort().join(",")).to.equal(
-        expectedExports.sort().join(",")
-      );
+      expect(Object.keys(fileUtils).sort().join(",")).to.equal(expectedExports.sort().join(","));
     });
   });
 });
@@ -56,6 +50,19 @@ Feature("file-utils feature", () => {
     });
     Then("we should have received nothing", () => {
       should.not.exist(response);
+    });
+  });
+
+  Scenario("successfully modify file data", () => {
+    let response;
+    When("converting JSON lines to an array", () => {
+      response = fileUtils.modifyFile(jsonLines, (row) => row.header1);
+    });
+    Then("we should have received a list with only headers", () => {
+      const expectedData = array.map((row) => {
+        return `"${row.header1}"`;
+      }).join("\n");
+      response.should.eql(`${expectedData}\n`);
     });
   });
 });

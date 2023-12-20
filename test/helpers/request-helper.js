@@ -6,7 +6,7 @@ const { main } = JSON.parse(readFileSync(new URL("../../package.json", import.me
 
 const url = `http://localhost:${process.env.PORT || 8080}`;
 
-export async function post(path, payload) {
+async function post(path, payload) {
   assert(main, "missing entry point, specify it in package.json");
   await import(`../../${main}`);
 
@@ -17,7 +17,7 @@ export async function post(path, payload) {
     .expect("Content-Type", new RegExp("application/json"));
 }
 
-export async function get(path) {
+async function get(path) {
   await assert(main, "missing entry point, specify it in package.json");
   await import(`../../${main}`);
 
@@ -26,3 +26,5 @@ export async function get(path) {
     .set("Content-Type", "application/json")
     .expect("Content-Type", new RegExp("application/json"));
 }
+
+export { post, get };

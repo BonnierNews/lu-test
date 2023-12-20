@@ -1,4 +1,4 @@
-site_name: 'LU Common'
+site_name: "LU Common"
 
 nav:
   - Docs: README.md

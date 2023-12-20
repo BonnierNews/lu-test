@@ -2,10 +2,13 @@ import nock from "nock";
 import config from "exp-config";
 import stream from "stream";
 import zlib from "zlib";
+import { getFile } from "test-data";
 
 import clone from "./clone.js";
 
-export default function init(url = config.proxyUrl) {
+const proxyUrl = config.gcpProxy.url;
+
+function init(url = proxyUrl) {
   let api = nock(url);
 
   function reset() {
@@ -21,54 +24,53 @@ export default function init(url = config.proxyUrl) {
     }
   }
 
-  function mount(testData, times) {
-    if (Array.isArray(testData)) {
-      return testData.map(mount);
+  async function mountFile(filename, times) {
+    const { default: testRequest } = await getFile(filename);
+    return mount(testRequest, times);
+  }
+
+  function mount(testRequest, times) {
+    if (Array.isArray(testRequest)) {
+      return testRequest.map(mount);
     }
     let actualBody;
-    const { request } = testData;
-    if (request.baseUrl && request.baseUrl !== url) {
-      throw new Error(`Mismatching urls ${request.baseUrl} ${url}`);
-    }
+    const { request } = testRequest;
+    if (request.baseUrl && request.baseUrl !== url) throw new Error(`Mismatching urls ${request.baseUrl} ${url}`);
     const mock = api[request.method.toLowerCase()](request.path, (body) => {
       actualBody = body;
       return true;
     });
 
-    const numTimes = times || testData.times;
-    if (numTimes) mock.times(numTimes);
+    if (times || testRequest.times) mock.times(times || testRequest.times);
 
     if (request.query) {
       mock.query(request.query);
     }
 
+    let hasContentType = false;
     if (request.headers) {
       for (const [ key, val ] of Object.entries(request.headers)) {
+        if (key.toLowerCase() === "content-type") hasContentType = true;
         mock.matchHeader(key, val);
       }
     }
 
-    const statusCode = testData.statusCode ?? testData.status ?? 200;
-    if (testData.stream && testData.compress) {
-      const body =
-        typeof testData.body === "object"
-          ? JSON.stringify(testData.body)
-          : testData.body;
-      mock.reply(
-        statusCode,
-        stream.Readable.from([ body ]).pipe(zlib.createGzip())
-      );
-    } else if (testData.stream) {
-      const body =
-        typeof testData.body === "object"
-          ? JSON.stringify(testData.body)
-          : testData.body;
-      mock.reply(statusCode, stream.Readable.from([ body ]), {
-        "content-length": body.length,
-        ...testData.headers,
+    const headers = testRequest.headers || {};
+    if (!hasContentType) headers["Content-Type"] = "application/json";
+
+    if (url === proxyUrl) mock.matchHeader("Authorization", /Bearer .*/);
+
+    const statusCode = testRequest.statusCode ?? testRequest.status ?? 200;
+    const responseBody = typeof testRequest.body === "object" ? JSON.stringify(testRequest.body) : testRequest.body;
+    if (testRequest.stream && testRequest.compress) {
+      mock.reply(statusCode, stream.Readable.from([ responseBody ]).pipe(zlib.createGzip()), headers);
+    } else if (testRequest.stream) {
+      mock.reply(statusCode, stream.Readable.from([ responseBody ]), {
+        "content-length": responseBody.length,
+        ...headers,
       });
     } else {
-      mock.reply(statusCode, testData.body, testData.headers || undefined);
+      mock.reply(statusCode, responseBody, headers);
     }
 
     return {
@@ -86,11 +88,7 @@ export default function init(url = config.proxyUrl) {
   }
 
   function fakePrefixedResource(prefix, content, times = 1) {
-    return fakeJsonResponse(
-      `${prefix}/${content.type}/${content.id}`,
-      content,
-      times
-    );
+    return fakeJsonResponse(`${prefix}/${content.type}/${content.id}`, content, times);
   }
 
   function fakeJsonResponse(apiPath, content, times = 1, status = 200) {
@@ -112,9 +110,7 @@ export default function init(url = config.proxyUrl) {
 
   function mountExternal(external) {
     if (!external) {
-      throw new Error(
-        "Could not mount, provided object is empty or missing external property"
-      );
+      throw new Error("Could not mount, provided object is empty or missing external property");
     }
 
     const mounts = Object.values(external).map((value) => {
@@ -133,15 +129,18 @@ export default function init(url = config.proxyUrl) {
     fakeResources,
     fakeResource,
     filteringPath: api.filteringPath.bind(api),
-    get: api.get.bind(api),
-    post: api.post.bind(api),
-    put: api.put.bind(api),
-    delete: api.delete.bind(api),
-    patch: api.patch.bind(api),
+    get: url === proxyUrl ? api.matchHeader("Authorization", /Bearer .*/).get.bind(api) : api.get.bind(api),
+    post: url === proxyUrl ? api.matchHeader("Authorization", /Bearer .*/).post.bind(api) : api.post.bind(api),
+    put: url === proxyUrl ? api.matchHeader("Authorization", /Bearer .*/).put.bind(api) : api.put.bind(api),
+    delete: url === proxyUrl ? api.matchHeader("Authorization", /Bearer .*/).delete.bind(api) : api.delete.bind(api),
+    patch: url === proxyUrl ? api.matchHeader("Authorization", /Bearer .*/).patch.bind(api) : api.patch.bind(api),
     mount,
+    mountFile,
     pendingMocks: api.pendingMocks.bind(api),
     matchHeader: api.matchHeader.bind(api),
     reset,
     mountExternal,
   };
 }
+
+export default init;

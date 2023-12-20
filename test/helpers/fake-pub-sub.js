@@ -16,7 +16,7 @@ function init() {
 }
 
 let requestAgent;
-export function enablePublish(broker) {
+function enablePublish(broker) {
   init();
   requestAgent = supertest.agent(broker);
   stub.topic = (topic) => {
@@ -37,7 +37,7 @@ export function enablePublish(broker) {
   };
 }
 
-export async function triggerMessage(broker, messageData, attributes) {
+async function triggerMessage(broker, messageData, attributes) {
   return await publish(broker, messageData, attributes);
 }
 
@@ -61,17 +61,19 @@ async function publish(app, messageData, attributes) {
   }
 }
 
-export function reset() {
+function reset() {
   messages = [];
   messageHandlerResponses = [];
   sandbox.restore();
   stub = null;
 }
 
-export function recordedMessages() {
+function recordedMessages() {
   return messages;
 }
 
-export function recordedMessageHandlerResponses() {
+function recordedMessageHandlerResponses() {
   return messageHandlerResponses;
 }
+
+export { enablePublish, triggerMessage, reset, recordedMessages, recordedMessageHandlerResponses };

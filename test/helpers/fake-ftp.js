@@ -13,7 +13,7 @@ function init() {
   }
 }
 
-export function put(expectedTargetPath) {
+function put(expectedTargetPath) {
   init();
   stub.access = () => {
     return;
@@ -30,7 +30,7 @@ export function put(expectedTargetPath) {
   };
 }
 
-export function putMany(expectedTargetPaths) {
+function putMany(expectedTargetPaths) {
   init();
   stub.access = () => {
     return;
@@ -50,7 +50,7 @@ export function putMany(expectedTargetPaths) {
   };
 }
 
-export function putError(message = "ftp put failed") {
+function putError(message = "ftp put failed") {
   init();
   stub.access = () => {
     return;
@@ -60,22 +60,24 @@ export function putError(message = "ftp put failed") {
   };
 }
 
-export function connectionError(message = "ftp connection failed") {
+function connectionError(message = "ftp connection failed") {
   init();
   stub.access = () => {
     throw new Error(message);
   };
 }
 
-export function written(path) {
+function written(path) {
   if (Buffer.isBuffer(writes[path])) {
     return writes[path].toString();
   }
   return writes[path];
 }
 
-export function reset() {
+function reset() {
   writes = {};
   sandbox.restore();
   stub = null;
 }
+
+export { put, putMany, putError, connectionError, written, reset };

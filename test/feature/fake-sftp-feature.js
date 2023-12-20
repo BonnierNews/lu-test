@@ -26,9 +26,7 @@ const expectedExports = [
 describe("fake-sftp exposed features", () => {
   describe("Importing default export", () => {
     it("The right stuff gets exposed", () => {
-      expect(Object.keys(fakeSftp).sort().join(",")).to.equal(
-        expectedExports.sort().join(",")
-      );
+      expect(Object.keys(fakeSftp).sort().join(",")).to.equal(expectedExports.sort().join(","));
     });
   });
 });
@@ -423,59 +421,45 @@ Feature("fake-sftp list feature", () => {
       }
     });
     Then("we should get an error about pattern not being a function", () => {
-      response.message.should.eql(
-        "expected pattern /something/ needs to be a function"
-      );
+      response.message.should.eql("expected pattern /something/ needs to be a function");
     });
-  }
-  );
+  });
 
-  Scenario("unsuccessfully fake listing a path, pattern doesn't match expected, no matching files",
-    () => {
-      Given("we fake listing some path", () => {
-        fakeSftp.list(path, filePattern, files);
-      });
-      let client;
-      And("we can connect to an sftp", async () => {
-        client = new SftpClient();
-        await client.connect(sftpConfig);
-      });
-      let response;
-      When("listing a path on the sftp", async () => {
-        response = await client.list(path, ({ name }) => name === "fish");
-      });
-      Then("we should get an error about mismatching patterns", () => {
-        response.should.eql([]);
-      });
-    }
-  );
+  Scenario("unsuccessfully fake listing a path, pattern doesn't match expected, no matching files", () => {
+    Given("we fake listing some path", () => {
+      fakeSftp.list(path, filePattern, files);
+    });
+    let client;
+    And("we can connect to an sftp", async () => {
+      client = new SftpClient();
+      await client.connect(sftpConfig);
+    });
+    let response;
+    When("listing a path on the sftp", async () => {
+      response = await client.list(path, ({ name }) => name === "fish");
+    });
+    Then("we should get an error about mismatching patterns", () => {
+      response.should.eql([]);
+    });
+  });
 
-  Scenario(
-    "unsuccessfully trying to fake listing several paths with a with a pattern instead of a function",
-    () => {
-      let response;
-      When("we try to fake listing a path with a with a pattern instead of a function", () => {
-        try {
-          fakeSftp.listMany([
-            { expectedPath: path, expectedPattern: "/something/", files },
-          ]);
-        } catch (error) {
-          response = error;
-        }
-      });
-      Then("we should get an error about pattern not being a function", () => {
-        response.message.should.eql(
-          "expected pattern /something/ needs to be a function"
-        );
-      });
-    }
-  );
+  Scenario("unsuccessfully trying to fake listing several paths with a with a pattern instead of a function", () => {
+    let response;
+    When("we try to fake listing a path with a with a pattern instead of a function", () => {
+      try {
+        fakeSftp.listMany([ { expectedPath: path, expectedPattern: "/something/", files } ]);
+      } catch (error) {
+        response = error;
+      }
+    });
+    Then("we should get an error about pattern not being a function", () => {
+      response.message.should.eql("expected pattern /something/ needs to be a function");
+    });
+  });
 
   Scenario("unsuccessfully fake listing several paths, no files matching", () => {
     Given("we fake listing some path", () => {
-      fakeSftp.listMany([
-        { expectedPath: path, expectedPattern: filePattern, files },
-      ]);
+      fakeSftp.listMany([ { expectedPath: path, expectedPattern: filePattern, files } ]);
     });
     let client;
     And("we can connect to an sftp", async () => {
@@ -489,14 +473,11 @@ Feature("fake-sftp list feature", () => {
     Then("we should get an empty array back", () => {
       response.should.eql([]);
     });
-  }
-  );
+  });
 
   Scenario("unsuccessfully fake listing several paths, pattern doesn't match expected, no files matching", () => {
     Given("we fake listing some path", () => {
-      fakeSftp.listMany([
-        { expectedPath: path, expectedPattern: filePattern, files },
-      ]);
+      fakeSftp.listMany([ { expectedPath: path, expectedPattern: filePattern, files } ]);
     });
     let client;
     And("we can connect to an sftp", async () => {
@@ -510,6 +491,5 @@ Feature("fake-sftp list feature", () => {
     Then("we should get an empty array back", () => {
       response.should.eql([]);
     });
-  }
-  );
+  });
 });

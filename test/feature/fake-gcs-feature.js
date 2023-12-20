@@ -20,10 +20,7 @@ Feature("fake-gcs feature", () => {
 
     When("we write the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const writeStream = storage
-        .bucket("some-bucket")
-        .file("dir/file.txt")
-        .createWriteStream();
+      const writeStream = storage.bucket("some-bucket").file("dir/file.txt").createWriteStream();
 
       const readStream = new stream.Readable();
       readStream.push("some text\n");
@@ -43,10 +40,7 @@ Feature("fake-gcs feature", () => {
 
     When("we write the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const writeStream = storage
-        .bucket("some-bucket")
-        .file("dir/file.txt")
-        .createWriteStream();
+      const writeStream = storage.bucket("some-bucket").file("dir/file.txt").createWriteStream();
 
       const readStream = new stream.Readable();
       readStream.push(null);
@@ -60,10 +54,7 @@ Feature("fake-gcs feature", () => {
     const read = [];
     Then("we read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage
-        .bucket("some-bucket")
-        .file("dir/file.txt")
-        .createReadStream();
+      const readStream = storage.bucket("some-bucket").file("dir/file.txt").createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -85,10 +76,7 @@ Feature("fake-gcs feature", () => {
 
     When("we write the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const writeStream = storage
-        .bucket("some-bucket")
-        .file("dir/file.txt")
-        .createWriteStream();
+      const writeStream = storage.bucket("some-bucket").file("dir/file.txt").createWriteStream();
 
       const readStream = new stream.Readable();
       for (let index = 0; index < 1000; index++) {
@@ -115,10 +103,7 @@ Feature("fake-gcs feature", () => {
 
     When("we write to file1's path", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const fileOne = storage
-        .bucket("some-bucket")
-        .file("dir/file_1.txt")
-        .createWriteStream();
+      const fileOne = storage.bucket("some-bucket").file("dir/file_1.txt").createWriteStream();
       const readStream = new stream.Readable();
       readStream.push("some text\n");
       readStream.push(null);
@@ -127,10 +112,7 @@ Feature("fake-gcs feature", () => {
 
     And("we write to file2's path", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const writeStream = storage
-        .bucket("some-bucket")
-        .file("dir/file_2.txt")
-        .createWriteStream();
+      const writeStream = storage.bucket("some-bucket").file("dir/file_2.txt").createWriteStream();
 
       const readStream = new stream.Readable();
       readStream.push("some other text\n");
@@ -153,10 +135,7 @@ Feature("fake-gcs feature", () => {
     const readOne = [];
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage
-        .bucket("some-bucket")
-        .file("dir/file_1.txt")
-        .createReadStream();
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -169,10 +148,7 @@ Feature("fake-gcs feature", () => {
     const readTwo = [];
     And("we try reading another one", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage
-        .bucket("some-bucket")
-        .file("dir/file_2.txt")
-        .createReadStream();
+      const readStream = storage.bucket("some-bucket").file("dir/file_2.txt").createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -182,13 +158,10 @@ Feature("fake-gcs feature", () => {
       });
     });
 
-    Then(
-      "we should have read 'some stuff\\n' and 'some other stuff\\n'",
-      () => {
-        readOne.join("").should.eql("some stuff\n");
-        readTwo.join("").should.eql("some other stuff\n");
-      }
-    );
+    Then("we should have read 'some stuff\\n' and 'some other stuff\\n'", () => {
+      readOne.join("").should.eql("some stuff\n");
+      readTwo.join("").should.eql("some other stuff\n");
+    });
   });
 
   Scenario("Read the same file multiple times from google", () => {
@@ -199,10 +172,7 @@ Feature("fake-gcs feature", () => {
     const readOne = [];
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage
-        .bucket("some-bucket")
-        .file("dir/file_1.txt")
-        .createReadStream();
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -213,12 +183,9 @@ Feature("fake-gcs feature", () => {
     });
 
     const readTwo = [];
-    And("we try reading another one", async () => {
+    And("we try reading it again", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage
-        .bucket("some-bucket")
-        .file("dir/file_1.txt")
-        .createReadStream();
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -228,13 +195,10 @@ Feature("fake-gcs feature", () => {
       });
     });
 
-    Then(
-      "we should have read 'some stuff\\n' and 'some other stuff\\n'",
-      () => {
-        readOne.join("").should.eql("some stuff\n");
-        readTwo.join("").should.eql("some stuff\n");
-      }
-    );
+    Then("we should have read 'some stuff\\n' twice", () => {
+      readOne.join("").should.eql("some stuff\n");
+      readTwo.join("").should.eql("some stuff\n");
+    });
   });
 
   Scenario("Write to one file, read from the other", () => {
@@ -246,10 +210,7 @@ Feature("fake-gcs feature", () => {
     const readOne = [];
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage
-        .bucket("some-bucket")
-        .file("dir/file_1.txt")
-        .createReadStream();
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -259,20 +220,14 @@ Feature("fake-gcs feature", () => {
       });
     });
 
-    Then(
-      "we should have read 'some stuff\\n'",
-      () => {
-        readOne.join("").should.eql("some stuff\n");
-      }
-    );
+    Then("we should have read 'some stuff\\n'", () => {
+      readOne.join("").should.eql("some stuff\n");
+    });
 
     let fileTwoExists;
     When("we check if the second file exists", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const exists = await storage
-        .bucket("some-bucket")
-        .file("dir/file_2.txt")
-        .exists();
+      const exists = await storage.bucket("some-bucket").file("dir/file_2.txt").exists();
 
       fileTwoExists = exists[0];
     });
@@ -283,10 +238,7 @@ Feature("fake-gcs feature", () => {
 
     When("we write to file two", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const writeStream = await storage
-        .bucket("some-bucket")
-        .file("dir/file_2.txt")
-        .createWriteStream();
+      const writeStream = await storage.bucket("some-bucket").file("dir/file_2.txt").createWriteStream();
 
       const readStream = new stream.Readable();
       readStream.push("some other text\n");
@@ -297,10 +249,7 @@ Feature("fake-gcs feature", () => {
     const readTwo = [];
     Then("we should be able to read file two", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = await storage
-        .bucket("some-bucket")
-        .file("dir/file_2.txt")
-        .createReadStream();
+      const readStream = await storage.bucket("some-bucket").file("dir/file_2.txt").createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -315,7 +264,7 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Read the two different files in two buckets from google", () => {
+  Scenario("Read two different files in two buckets from google", () => {
     Given("there's two readable files", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "some stuff\n" });
       fakeGcs.mockFile("gs://some-other-bucket/dir/file_1.txt", { content: "some other stuff\n" });
@@ -324,10 +273,7 @@ Feature("fake-gcs feature", () => {
     const readOne = [];
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage
-        .bucket("some-bucket")
-        .file("dir/file_1.txt")
-        .createReadStream();
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -340,10 +286,7 @@ Feature("fake-gcs feature", () => {
     const readTwo = [];
     And("we try reading another one", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage
-        .bucket("some-other-bucket")
-        .file("dir/file_1.txt")
-        .createReadStream();
+      const readStream = storage.bucket("some-other-bucket").file("dir/file_1.txt").createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -353,13 +296,10 @@ Feature("fake-gcs feature", () => {
       });
     });
 
-    Then(
-      "we should have read 'some stuff\\n' and 'some other stuff\\n'",
-      () => {
-        readOne.join("").should.eql("some stuff\n");
-        readTwo.join("").should.eql("some other stuff\n");
-      }
-    );
+    Then("we should have read 'some stuff\\n' and 'some other stuff\\n'", () => {
+      readOne.join("").should.eql("some stuff\n");
+      readTwo.join("").should.eql("some other stuff\n");
+    });
   });
 
   Scenario("Read a file with specific encoding from google", () => {
@@ -371,10 +311,7 @@ Feature("fake-gcs feature", () => {
     const readOne = [];
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      const readStream = storage
-        .bucket("some-bucket")
-        .file("dir/file_1.txt")
-        .createReadStream();
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
 
       await pipeline(readStream, async function* (iterable) {
         for await (const data of iterable) {
@@ -384,12 +321,9 @@ Feature("fake-gcs feature", () => {
       });
     });
 
-    Then(
-      "we should have read 'tést'",
-      () => {
-        readOne.join("").should.eql("tést");
-      }
-    );
+    Then("we should have read 'tést'", () => {
+      readOne.join("").should.eql("tést");
+    });
   });
 
   Scenario("Get a csv file's metadata from google", () => {
@@ -400,10 +334,7 @@ Feature("fake-gcs feature", () => {
     let metadata;
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      metadata = await storage
-        .bucket("some-bucket")
-        .file("dir/file_1.csv")
-        .getMetadata();
+      metadata = await storage.bucket("some-bucket").file("dir/file_1.csv").getMetadata();
     });
 
     Then("we should have got some metadata", () => {
@@ -424,10 +355,7 @@ Feature("fake-gcs feature", () => {
     let metadata;
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      metadata = await storage
-        .bucket("some-bucket")
-        .file("dir/file_1.json")
-        .getMetadata();
+      metadata = await storage.bucket("some-bucket").file("dir/file_1.json").getMetadata();
     });
 
     Then("we should have got some metadata", () => {
@@ -448,10 +376,7 @@ Feature("fake-gcs feature", () => {
     let metadata;
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      metadata = await storage
-        .bucket("some-bucket")
-        .file("dir/file_1.json.gz")
-        .getMetadata();
+      metadata = await storage.bucket("some-bucket").file("dir/file_1.json.gz").getMetadata();
     });
 
     Then("we should have got some metadata", () => {
@@ -472,10 +397,7 @@ Feature("fake-gcs feature", () => {
     let metadata;
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      metadata = await storage
-        .bucket("some-bucket")
-        .file("dir/file_1.txt")
-        .getMetadata();
+      metadata = await storage.bucket("some-bucket").file("dir/file_1.txt").getMetadata();
     });
 
     Then("we should have got some metadata", () => {
@@ -496,10 +418,7 @@ Feature("fake-gcs feature", () => {
     let metadata;
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      metadata = await storage
-        .bucket("some-bucket")
-        .file("dir/file_1")
-        .getMetadata();
+      metadata = await storage.bucket("some-bucket").file("dir/file_1").getMetadata();
     });
 
     Then("we should have got some metadata", () => {
@@ -512,21 +431,18 @@ Feature("fake-gcs feature", () => {
     });
   });
 
-  Scenario("Get a metadata from a file that does not exist from google", () => {
-    Given("there's a file", () => {
+  Scenario("Get metadata from a file that does not exist from google", () => {
+    Given("there is no file", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv");
     });
 
     let metadata;
     When("we try to read the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      metadata = await storage
-        .bucket("some-bucket")
-        .file("dir/file_1.csv")
-        .getMetadata();
+      metadata = await storage.bucket("some-bucket").file("dir/file_1.csv").getMetadata();
     });
 
-    Then("we should have got some metadata", () => {
+    Then("we should not have got any metadata", () => {
       should.not.exist(metadata);
     });
   });
@@ -536,20 +452,15 @@ Feature("fake-gcs feature", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "some,csv,file\n" });
     });
 
-    When("we try to read the file", async () => {
+    When("we try to delete the file", async () => {
       const storage = new Storage(config.gcs.credentials);
-      await storage
-        .bucket("some-bucket")
-        .file("dir/file_1.txt")
-        .delete();
+      await storage.bucket("some-bucket").file("dir/file_1.txt").delete();
     });
 
     let files;
     Then("we list files", async () => {
       const storage = new Storage(config.gcs.credentials);
-      files = await storage
-        .bucket("some-bucket")
-        .getFiles("dir/");
+      files = await storage.bucket("some-bucket").getFiles("dir/");
     });
 
     And("we should have no files", () => {
@@ -574,11 +485,11 @@ Feature("fake-gcs feature", () => {
   });
 
   Scenario("The stream throws an error", () => {
-    Given("there's a mocked file with readable data", () => {
+    Given("there's a mocked file with an error", () => {
       fakeGcs.mockFile(filePath, { content: "blahoga\n" }).throws(new Error("some error"));
     });
 
-    When("we ask if the file exists", () => {
+    When("we try to access the storage", () => {
       const storage = new Storage(config.gcs.credentials);
       assert.throws(() => {
         storage.bucket("some-bucket").file("dir/file.txt");
@@ -642,9 +553,7 @@ Feature("fake-gcs feature", () => {
     let files;
     When("we ask ask for a list of files", () => {
       const storage = new Storage(config.gcs.credentials);
-      files = storage
-        .bucket("some-bucket")
-        .getFiles({ prefix: "dir/" });
+      files = storage.bucket("some-bucket").getFiles({ prefix: "dir/" });
     });
 
     Then("we verify that there is just one", () => {
@@ -658,10 +567,7 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("when we try to mock the file again, it throws an error", () => {
-      assert.throws(
-        () => fakeGcs.mockFile(filePath),
-        /has already been mocked/
-      );
+      assert.throws(() => fakeGcs.mockFile(filePath), /has already been mocked/);
     });
   });
 });

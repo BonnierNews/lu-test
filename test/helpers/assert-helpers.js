@@ -1,6 +1,6 @@
 import chai from "chai";
 
-export async function assertRejected(fn) {
+async function assertRejected(fn) {
   try {
     await fn();
   } catch (error) {
@@ -11,7 +11,7 @@ export async function assertRejected(fn) {
   throw new chai.AssertionError("not rejected");
 }
 
-export async function assertRetry(fn) {
+async function assertRetry(fn) {
   try {
     await fn();
   } catch (error) {
@@ -21,7 +21,7 @@ export async function assertRetry(fn) {
   throw new chai.AssertionError("not retried");
 }
 
-export async function assertUnrecoverable(fn) {
+async function assertUnrecoverable(fn) {
   try {
     await fn();
   } catch (error) {
@@ -30,3 +30,5 @@ export async function assertUnrecoverable(fn) {
   }
   throw new chai.AssertionError("not unrecoverable");
 }
+
+export { assertRejected, assertRetry, assertUnrecoverable };

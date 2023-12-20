@@ -27,7 +27,6 @@ const expectedExports = [
   "matchHeader",
   "reset",
   "mountExternal",
-  "mountFolder",
 ];
 
 describe("fake-api exposed features", () => {
@@ -201,6 +200,33 @@ Feature("fake-api mount feature", () => {
     let mount;
     Given("we fake a resource using mount", () => {
       mount = fakeApi.mount(basePost, times);
+    });
+    let response;
+    When("trying to post to a url", async () => {
+      response = await axios.post(url, content);
+    });
+    Then("the status should be 200, Ok", () => {
+      response.status.should.eql(200, response.text);
+    });
+    And("the body should be the expected", () => {
+      response.data.should.eql(content);
+    });
+    And("the mount should have been called with the expected body", () => {
+      mount.hasExpectedBody();
+    });
+    And("the mount's called body should be the expected body", () => {
+      mount.calledBody().should.eql(content);
+    });
+    And("the mount's posted body should be the expected body", () => {
+      mount.postedBody().should.eql(content);
+    });
+  });
+
+  Scenario("fake with a mount from test data file", () => {
+    const url = `${config.proxyUrl}:80${path}`;
+    let mount;
+    Given("we fake a resource using mount", () => {
+      mount = fakeApi.mount("request-post", times);
     });
     let response;
     When("trying to post to a url", async () => {

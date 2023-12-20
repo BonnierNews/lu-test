@@ -2,8 +2,7 @@ import nock from "nock";
 import config from "exp-config";
 import stream from "stream";
 import zlib from "zlib";
-import path from "path";
-import fs from "fs";
+import { getFile } from "test-data";
 
 import clone from "./clone.js";
 
@@ -23,22 +22,22 @@ function init(url = config.gcpProxy?.url || config.proxyUrl || config.awsProxyUr
     }
   }
 
-  function mount(testData, times) {
-    if (Array.isArray(testData)) {
-      return testData.map(mount);
+  function mount(testRequest, times) {
+    if (Array.isArray(testRequest)) {
+      return testRequest.map(mount);
     }
-    if (typeof testData === "string") {
-      testData = require("test-data")(testData);
+    if (typeof testRequest === "string") {
+      testRequest = getFile(testRequest);
     }
     let actualBody;
-    const { request } = testData;
+    const { request } = testRequest;
     if (request.baseUrl && request.baseUrl !== url) throw new Error(`Mismatching urls ${request.baseUrl} ${url}`);
     const mock = api[request.method.toLowerCase()](request.path, (body) => {
       actualBody = body;
       return true;
     });
 
-    if (times || testData.times) mock.times(times || testData.times);
+    if (times || testRequest.times) mock.times(times || testRequest.times);
 
     if (request.query) {
       mock.query(request.query);
@@ -52,19 +51,16 @@ function init(url = config.gcpProxy?.url || config.proxyUrl || config.awsProxyUr
       }
     }
 
-    const headers = testData.headers || {};
+    const headers = testRequest.headers || {};
     if (!hasContentType) headers["Content-Type"] = "application/json";
 
     if (url === config.gcpProxy?.url) mock.matchHeader("Authorization", /Bearer .*/);
 
-    const statusCode = testData.statusCode ?? testData.status ?? 200;
-    const responseBody = typeof testData.body === "object" ? JSON.stringify(testData.body) : testData.body;
-    if (testData.stream && testData.compress) {
-      mock.reply(statusCode, stream.Readable.from([ responseBody ]).pipe(zlib.createGzip()), {
-        "content-encoding": "gzip",
-        ...headers,
-      });
-    } else if (testData.stream) {
+    const statusCode = testRequest.statusCode ?? testRequest.status ?? 200;
+    const responseBody = typeof testRequest.body === "object" ? JSON.stringify(testRequest.body) : testRequest.body;
+    if (testRequest.stream && testRequest.compress) {
+      mock.reply(statusCode, stream.Readable.from([ responseBody ]).pipe(zlib.createGzip()), headers);
+    } else if (testRequest.stream) {
       mock.reply(statusCode, stream.Readable.from([ responseBody ]), {
         "content-length": responseBody.length,
         ...headers,
@@ -85,11 +81,6 @@ function init(url = config.gcpProxy?.url || config.proxyUrl || config.awsProxyUr
       },
       postedBody: () => actualBody,
     };
-  }
-
-  function mountFolder(folderName) {
-    const dirName = path.join(path.dirname(require.resolve("test-data")), folderName);
-    return fs.readdirSync(dirName).map((fileName) => mount(path.join(folderName, fileName)));
   }
 
   function fakePrefixedResource(prefix, content, times = 1) {
@@ -147,7 +138,6 @@ function init(url = config.gcpProxy?.url || config.proxyUrl || config.awsProxyUr
         ? api.matchHeader("Authorization", /Bearer .*/).patch.bind(api)
         : api.patch.bind(api),
     mount,
-    mountFolder,
     pendingMocks: api.pendingMocks.bind(api),
     matchHeader: api.matchHeader.bind(api),
     reset,

@@ -52,4 +52,17 @@ Feature("file-utils feature", () => {
       should.not.exist(response);
     });
   });
+
+  Scenario("successfully modify file data", () => {
+    let response;
+    When("converting JSON lines to an array", () => {
+      response = fileUtils.modifyFile(jsonLines, (row) => row.header1);
+    });
+    Then("we should have received a list with only headers", () => {
+      const expectedData = array.map((row) => {
+        return `"${row.header1}"`;
+      }).join("\n");
+      response.should.eql(`${expectedData}\n`);
+    });
+  });
 });

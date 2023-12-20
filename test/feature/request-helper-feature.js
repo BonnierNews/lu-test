@@ -2,6 +2,7 @@ import { expect } from "chai";
 
 import * as requestHelper from "../helpers/request-helper.js";
 import init from "../helpers/fake-api.js";
+import * as fakeGcpAuth from "../helpers/fake-gcp-auth.js";
 
 const fakeApi = init("http://localhost:8080");
 
@@ -19,7 +20,10 @@ Feature("request-helper feature", () => {
   beforeEachScenario(() => {
     fakeApi.reset();
     fakeApi.disableNetConnect();
+    fakeGcpAuth.authenticated();
   });
+
+  after(fakeGcpAuth.reset);
 
   Scenario("successfully fake a get", () => {
     Given("we have a _status endpoint", () => {

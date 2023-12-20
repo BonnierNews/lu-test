@@ -4,6 +4,7 @@ import config from "exp-config";
 import zlib from "zlib";
 
 import init from "../helpers/fake-api.js";
+import * as fakeGcpAuth from "../helpers/fake-gcp-auth.js";
 
 axios.defaults.validateStatus = () => true; // make request unasserted
 const fakeApi = init();
@@ -27,6 +28,7 @@ const expectedExports = [
   "matchHeader",
   "reset",
   "mountExternal",
+  "mountFile",
 ];
 
 describe("fake-api exposed features", () => {
@@ -37,9 +39,11 @@ describe("fake-api exposed features", () => {
   });
 });
 
+const times = 2;
+const authHeader = { Authorization: "Bearer some-audience" };
+
 const path = "/some-path",
-  content = { id: "some-id", type: "some-type" },
-  times = 2;
+  content = { id: "some-id", type: "some-type" };
 const basePost = {
   request: { method: "post", path, body: { ...content } },
   statusCode: 200,
@@ -56,7 +60,7 @@ Feature("fake-api net connect feature", () => {
     let response;
     When("trying to get a url", async () => {
       try {
-        await axios.get(config.proxyUrl);
+        await axios.get(config.gcpProxy.url);
       } catch (error) {
         response = error;
       }
@@ -71,7 +75,7 @@ Feature("fake-api json response feature", () => {
   beforeEachScenario(fakeApi.reset);
 
   Scenario("fake json response", () => {
-    const url = `${config.proxyUrl}:80${path}`;
+    const url = `${config.gcpProxy.url}:80${path}`;
     let response;
     When("faking a json response", () => {
       response = fakeApi.fakeJsonResponse(path, content, times);
@@ -91,7 +95,7 @@ Feature("fake-api json response feature", () => {
   });
 
   Scenario("fake not existing", () => {
-    const url = `${config.proxyUrl}:80${path}`;
+    const url = `${config.gcpProxy.url}:80${path}`;
     let response;
     When("faking a non-existent endpoint", () => {
       response = fakeApi.fakeNotExisting(path, content, times);
@@ -111,7 +115,7 @@ Feature("fake-api json response feature", () => {
   });
 
   Scenario("fake not existing, without a body", () => {
-    const url = `${config.proxyUrl}:80${path}`;
+    const url = `${config.gcpProxy.url}:80${path}`;
     let response;
     When("faking a non-existent endpoint", () => {
       response = fakeApi.fakeNotExisting(path);
@@ -135,7 +139,7 @@ Feature("fake-api resource feature", () => {
   beforeEachScenario(fakeApi.reset);
 
   Scenario("fake resource", () => {
-    const url = `${config.proxyUrl}:80/${content.type}/${content.id}`;
+    const url = `${config.gcpProxy.url}:80/${content.type}/${content.id}`;
     let response;
     When("faking a resource", () => {
       response = fakeApi.fakeResource(content, times);
@@ -155,7 +159,7 @@ Feature("fake-api resource feature", () => {
   });
 
   Scenario("fake a prefixed resource", () => {
-    const url = `${config.proxyUrl}:80${path}/${content.type}/${content.id}`;
+    const url = `${config.gcpProxy.url}:80${path}/${content.type}/${content.id}`;
     let response;
     When("faking a resource with a prefix", () => {
       response = fakeApi.fakePrefixedResource(path, content, times);
@@ -175,7 +179,7 @@ Feature("fake-api resource feature", () => {
   });
 
   Scenario("fake a resource the old way", () => {
-    const url = `${config.proxyUrl}:80/${content.type}/${content.id}`;
+    const url = `${config.gcpProxy.url}:80/${content.type}/${content.id}`;
     Given("a faked resource", () => {
       fakeApi.fakeResources(content);
     });
@@ -193,17 +197,80 @@ Feature("fake-api resource feature", () => {
 });
 
 Feature("fake-api mount feature", () => {
-  beforeEachScenario(fakeApi.reset);
+  beforeEachScenario(() => {
+    fakeApi.reset();
+    fakeGcpAuth.authenticated();
+  });
+
+  after(fakeGcpAuth.reset);
 
   Scenario("fake with a mount", () => {
-    const url = `${config.proxyUrl}:80${path}`;
+    const url = `${config.gcpProxy.url}:80${path}`;
+    let mount;
+    Given("we fake a resource using mount", () => {
+      mount = fakeApi.mount(basePost);
+    });
+    let response;
+    When("trying to post to a url", async () => {
+      response = await axios.post(url, content, { headers: authHeader });
+    });
+    Then("the status should be 200, Ok", () => {
+      response.status.should.eql(200, response.text);
+    });
+    And("the body should be the expected", () => {
+      response.data.should.eql(content);
+    });
+    And("the mount should have been called with the expected body", () => {
+      mount.hasExpectedBody();
+    });
+    And("the mount's called body should be the expected body", () => {
+      mount.calledBody().should.eql(content);
+    });
+    And("the mount's posted body should be the expected body", () => {
+      mount.postedBody().should.eql(content);
+    });
+  });
+
+  Scenario("fake with a mount specifying content type", () => {
+    const url = `${config.gcpProxy.url}:80${path}`;
+    let mount;
+    Given("we fake a resource using mount", () => {
+      const request = { ...basePost, request: { ...basePost.request, headers: { "Content-Type": "application/json" } } };
+      mount = fakeApi.mount(request);
+    });
+    let response;
+    When("trying to post to a url", async () => {
+      response = await axios.post(url, content, { headers: authHeader });
+    });
+    Then("the status should be 200, Ok", () => {
+      response.status.should.eql(200, response.text);
+    });
+    And("the body should be the expected", () => {
+      response.data.should.eql(content);
+    });
+    And("the mount should have been called with the expected body", () => {
+      mount.hasExpectedBody();
+    });
+  });
+
+  Scenario("fake with a mount twice using option", () => {
+    const url = `${config.gcpProxy.url}:80${path}`;
     let mount;
     Given("we fake a resource using mount", () => {
       mount = fakeApi.mount(basePost, times);
     });
     let response;
     When("trying to post to a url", async () => {
-      response = await axios.post(url, content);
+      response = await axios.post(url, content, { headers: authHeader });
+    });
+    Then("the status should be 200, Ok", () => {
+      response.status.should.eql(200, response.text);
+    });
+    And("the body should be the expected", () => {
+      response.data.should.eql(content);
+    });
+    When("trying to post to a url again", async () => {
+      response = await axios.post(url, content, { headers: authHeader });
     });
     Then("the status should be 200, Ok", () => {
       response.status.should.eql(200, response.text);
@@ -214,23 +281,50 @@ Feature("fake-api mount feature", () => {
     And("the mount should have been called with the expected body", () => {
       mount.hasExpectedBody();
     });
-    And("the mount's called body should be the expected body", () => {
-      mount.calledBody().should.eql(content);
+  });
+
+  Scenario("fake with a mount twice using property", () => {
+    const url = `${config.gcpProxy.url}:80${path}`;
+    let mount;
+    Given("we fake a resource using mount", () => {
+      mount = fakeApi.mount({ ...basePost, times });
     });
-    And("the mount's posted body should be the expected body", () => {
-      mount.postedBody().should.eql(content);
+    let response;
+    When("trying to post to a url", async () => {
+      response = await axios.post(url, content, { headers: authHeader });
+    });
+    Then("the status should be 200, Ok", () => {
+      response.status.should.eql(200, response.text);
+    });
+    And("the body should be the expected", () => {
+      response.data.should.eql(content);
+    });
+    And("the mount should have been called with the expected body", () => {
+      mount.hasExpectedBody();
+    });
+    When("trying to post to a url again", async () => {
+      response = await axios.post(url, content, { headers: authHeader });
+    });
+    Then("the status should be 200, Ok", () => {
+      response.status.should.eql(200, response.text);
+    });
+    And("the body should be the expected", () => {
+      response.data.should.eql(content);
+    });
+    And("the mount should have been called with the expected body", () => {
+      mount.hasExpectedBody();
     });
   });
 
   Scenario("fake with a mount from test data file", () => {
-    const url = `${config.proxyUrl}:80${path}`;
+    const url = `${config.gcpProxy.url}:80${path}`;
     let mount;
-    Given("we fake a resource using mount", () => {
-      mount = fakeApi.mount("request-post", times);
+    Given("we fake a resource using mount", async () => {
+      mount = await fakeApi.mountFile("request-post", times);
     });
     let response;
     When("trying to post to a url", async () => {
-      response = await axios.post(url, content);
+      response = await axios.post(url, content, { headers: authHeader });
     });
     Then("the status should be 200, Ok", () => {
       response.status.should.eql(200, response.text);
@@ -241,18 +335,12 @@ Feature("fake-api mount feature", () => {
     And("the mount should have been called with the expected body", () => {
       mount.hasExpectedBody();
     });
-    And("the mount's called body should be the expected body", () => {
-      mount.calledBody().should.eql(content);
-    });
-    And("the mount's posted body should be the expected body", () => {
-      mount.postedBody().should.eql(content);
-    });
   });
 
   Scenario("fake with multiple mounts", () => {
-    const url = `${config.proxyUrl}:80${path}`;
+    const url = `${config.gcpProxy.url}:80${path}`;
     const query = { some: "value" };
-    const headers = { Accept: "text/json" };
+    const headers = { Accept: "text/json", ...authHeader };
     let mounts;
     Given("we fake multiple resources using mount", () => {
       mounts = fakeApi.mount(
@@ -269,7 +357,7 @@ Feature("fake-api mount feature", () => {
     });
     let postResponse;
     When("trying to post to a url", async () => {
-      postResponse = await axios.post(url, content);
+      postResponse = await axios.post(url, content, { headers: authHeader });
     });
     Then("the status should be 200, Ok", () => {
       postResponse.status.should.eql(200, postResponse.text);
@@ -293,7 +381,7 @@ Feature("fake-api mount feature", () => {
   });
 
   Scenario("fake with a mount and a JSON body, streaming the response", () => {
-    const url = `${config.proxyUrl}:80${path}`;
+    const url = `${config.gcpProxy.url}:80${path}`;
     Given("we fake a resource using mount, streaming the response", () => {
       fakeApi.mount({
         request: { method: "get", path },
@@ -308,6 +396,7 @@ Feature("fake-api mount feature", () => {
         method: "get",
         url,
         responseType: "stream",
+        headers: authHeader,
       });
     });
     Then("the status should be 200, Ok", () => {
@@ -320,7 +409,7 @@ Feature("fake-api mount feature", () => {
   });
 
   Scenario("fake with a mount and a text body, streaming the response", () => {
-    const url = `${config.proxyUrl}:80${path}`;
+    const url = `${config.gcpProxy.url}:80${path}`;
     Given("we fake a resource using mount, streaming the response", () => {
       fakeApi.mount({
         request: { method: "get", path },
@@ -335,6 +424,7 @@ Feature("fake-api mount feature", () => {
         method: "get",
         url,
         responseType: "stream",
+        headers: authHeader,
       });
     });
     Then("the status should be 200, Ok", () => {
@@ -347,7 +437,7 @@ Feature("fake-api mount feature", () => {
   });
 
   Scenario("fake with a mount and a JSON body, compressing and streaming the response", () => {
-    const url = `${config.proxyUrl}:80${path}`;
+    const url = `${config.gcpProxy.url}:80${path}`;
     Given("we fake a resource using mount, compressing and streaming the response", () => {
       fakeApi.mount(
         {
@@ -361,7 +451,10 @@ Feature("fake-api mount feature", () => {
     });
     let response;
     When("trying to get a url as a stream", async () => {
-      response = await axios.get(url, { responseType: "stream" });
+      response = await axios.get(url, {
+        responseType: "stream",
+        headers: authHeader,
+      });
     });
     Then("the status should be 200, Ok", () => {
       response.status.should.eql(200, response.text);
@@ -378,7 +471,7 @@ Feature("fake-api mount feature", () => {
   });
 
   Scenario("fake with a mount and a text body, compressing and streaming the response", () => {
-    const url = `${config.proxyUrl}:80${path}`;
+    const url = `${config.gcpProxy.url}:80${path}`;
     Given("we fake a resource using mount, compressing and streaming the response", () => {
       fakeApi.mount(
         {
@@ -392,7 +485,10 @@ Feature("fake-api mount feature", () => {
     });
     let response;
     When("trying to get a url as a stream", async () => {
-      response = await axios.get(url, { responseType: "stream" });
+      response = await axios.get(url, {
+        responseType: "stream",
+        headers: authHeader,
+      });
     });
     Then("the status should be 200, Ok", () => {
       response.status.should.eql(200, response.text);
@@ -409,7 +505,7 @@ Feature("fake-api mount feature", () => {
   });
 
   Scenario("fake with a mount, wrong url", () => {
-    const url = config.proxyUrl.replace("http", "https");
+    const url = config.gcpProxy.url.replace("http", "https");
     let mount;
     When("we try to mount a resource with a bad baseUrl", () => {
       try {
@@ -419,7 +515,7 @@ Feature("fake-api mount feature", () => {
       }
     });
     Then("we should receive an error about mismatching urls", () => {
-      mount.message.should.eql(`Mismatching urls ${url} ${config.proxyUrl}`);
+      mount.message.should.eql(`Mismatching urls ${url} ${config.gcpProxy.url}`);
     });
   });
 });

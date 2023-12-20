@@ -11,5 +11,5 @@
     "accessKeyId": "REPLACED_BY_ENV",
     "secretAccessKey": "REPLACED_BY_ENV"
   },
-  "proxyUrl": "http://example.com"
+  "gcpProxy": { "url": "http://example.com", "audience": "some-audience" }
 }

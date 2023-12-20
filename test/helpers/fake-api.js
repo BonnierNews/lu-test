@@ -6,7 +6,11 @@ import { getFile } from "test-data";
 
 import clone from "./clone.js";
 
-function init(url = config.gcpProxy?.url || config.proxyUrl || config.awsProxyUrl) {
+const proxyUrl = config.gcpProxy.url;
+
+/* c8 ignore start */
+function init(url = proxyUrl) {
+  /* c8 ignore stop */
   let api = nock(url);
 
   function reset() {
@@ -22,12 +26,14 @@ function init(url = config.gcpProxy?.url || config.proxyUrl || config.awsProxyUr
     }
   }
 
+  async function mountFile(filename, times) {
+    const { default: testRequest } = await getFile(filename);
+    return mount(testRequest, times);
+  }
+
   function mount(testRequest, times) {
     if (Array.isArray(testRequest)) {
       return testRequest.map(mount);
-    }
-    if (typeof testRequest === "string") {
-      testRequest = getFile(testRequest);
     }
     let actualBody;
     const { request } = testRequest;
@@ -54,7 +60,7 @@ function init(url = config.gcpProxy?.url || config.proxyUrl || config.awsProxyUr
     const headers = testRequest.headers || {};
     if (!hasContentType) headers["Content-Type"] = "application/json";
 
-    if (url === config.gcpProxy?.url) mock.matchHeader("Authorization", /Bearer .*/);
+    if (url === proxyUrl) mock.matchHeader("Authorization", /Bearer .*/);
 
     const statusCode = testRequest.statusCode ?? testRequest.status ?? 200;
     const responseBody = typeof testRequest.body === "object" ? JSON.stringify(testRequest.body) : testRequest.body;
@@ -125,19 +131,13 @@ function init(url = config.gcpProxy?.url || config.proxyUrl || config.awsProxyUr
     fakeResources,
     fakeResource,
     filteringPath: api.filteringPath.bind(api),
-    get: url === config.gcpProxy?.url ? api.matchHeader("Authorization", /Bearer .*/).get.bind(api) : api.get.bind(api),
-    post:
-      url === config.gcpProxy?.url ? api.matchHeader("Authorization", /Bearer .*/).post.bind(api) : api.post.bind(api),
-    put: url === config.gcpProxy?.url ? api.matchHeader("Authorization", /Bearer .*/).put.bind(api) : api.put.bind(api),
-    delete:
-      url === config.gcpProxy?.url
-        ? api.matchHeader("Authorization", /Bearer .*/).delete.bind(api)
-        : api.delete.bind(api),
-    patch:
-      url === config.gcpProxy?.url
-        ? api.matchHeader("Authorization", /Bearer .*/).patch.bind(api)
-        : api.patch.bind(api),
+    get: url === proxyUrl ? api.matchHeader("Authorization", /Bearer .*/).get.bind(api) : api.get.bind(api),
+    post: url === proxyUrl ? api.matchHeader("Authorization", /Bearer .*/).post.bind(api) : api.post.bind(api),
+    put: url === proxyUrl ? api.matchHeader("Authorization", /Bearer .*/).put.bind(api) : api.put.bind(api),
+    delete: url === proxyUrl ? api.matchHeader("Authorization", /Bearer .*/).delete.bind(api) : api.delete.bind(api),
+    patch: url === proxyUrl ? api.matchHeader("Authorization", /Bearer .*/).patch.bind(api) : api.patch.bind(api),
     mount,
+    mountFile,
     pendingMocks: api.pendingMocks.bind(api),
     matchHeader: api.matchHeader.bind(api),
     reset,

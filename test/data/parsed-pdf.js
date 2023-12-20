@@ -1,6 +1,4 @@
-"use strict";
-
-module.exports = [
+export default [
   {
     pageNumber: 1,
     layout: "portrait",

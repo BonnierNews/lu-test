@@ -1,7 +1,4 @@
-"use strict";
-
-module.exports =
-{
+export default {
   Transcoder: "pdf2json@3.0.1 [https://github.com/modesty/pdf2json]",
   Meta: {
     PDFFormatVersion: "1.3",

@@ -79,8 +79,6 @@ function existsMultipleCalls(path, fileExistsArr) {
   const { Bucket: bucket } = parseUri(path);
   if (!bucketStub) bucketStub = sandbox.stub(Storage.prototype, "bucket");
 
-  if (files[path]) throw new Error(`${path} has already been mocked`);
-
   for (const i in fileExistsArr) {
     bucketStub
       .withArgs(bucket)

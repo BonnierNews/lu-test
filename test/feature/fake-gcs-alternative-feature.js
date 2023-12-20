@@ -300,6 +300,32 @@ Feature("fake-gcs alternative api feature", () => {
     });
   });
 
+  Scenario("The read path throws an error", () => {
+    Given("there's a mocked path with an error", () => {
+      fakeGcs.readWithPathError(filePath);
+    });
+
+    When("we try to access the storage", () => {
+      const storage = new Storage(config.gcs.credentials);
+      assert.throws(() => {
+        storage.bucket("some-bucket").file("dir/file.txt");
+      }, /gcs file stream read error/);
+    });
+  });
+
+  Scenario("The read path throws a specified error", () => {
+    Given("there's a mocked path with a specified error", () => {
+      fakeGcs.readWithPathError(filePath, "some error");
+    });
+
+    When("we try to access the storage", () => {
+      const storage = new Storage(config.gcs.credentials);
+      assert.throws(() => {
+        storage.bucket("some-bucket").file("dir/file.txt");
+      }, /some error/);
+    });
+  });
+
   Scenario("Check if a file exists on google without readable data", () => {
     Given("the file doesn't exist", () => {
       fakeGcs.exists(filePath, false);
@@ -324,70 +350,6 @@ Feature("fake-gcs alternative api feature", () => {
     let exists;
     When("we ask if the file exists", () => {
       const storage = new Storage(config.gcs.credentials);
-      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
-    });
-
-    Then("we verify that it does exist", () => {
-      exists.should.eql([ true ]);
-    });
-  });
-
-  Scenario("Check if a file exists on google with readable data - first it doesn't, then it does", () => {
-    Given("the file doesn't exist twice and then it does", () => {
-      fakeGcs.exists(filePath, [ false, false, true ]);
-    });
-
-    let exists;
-    const storage = new Storage(config.gcs.credentials);
-    When("we ask if the file exists", () => {
-      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
-    });
-
-    Then("we verify that it doesn't exist", () => {
-      exists.should.eql([ false ]);
-    });
-
-    When("we ask if the file exists a second time", () => {
-      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
-    });
-
-    Then("we verify that it doesn't exist", () => {
-      exists.should.eql([ false ]);
-    });
-
-    When("we ask if the file exists a third time", () => {
-      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
-    });
-
-    Then("we verify that it does exist", () => {
-      exists.should.eql([ true ]);
-    });
-  });
-
-  Scenario("Check if a file exists on google with readable data - using multiple calls function", () => {
-    Given("the file doesn't exist twice and then it does", () => {
-      fakeGcs.existsMultipleCalls(filePath, [ false, false, true ]);
-    });
-
-    let exists;
-    const storage = new Storage(config.gcs.credentials);
-    When("we ask if the file exists", () => {
-      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
-    });
-
-    Then("we verify that it doesn't exist", () => {
-      exists.should.eql([ false ]);
-    });
-
-    When("we ask if the file exists a second time", () => {
-      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
-    });
-
-    Then("we verify that it doesn't exist", () => {
-      exists.should.eql([ false ]);
-    });
-
-    When("we ask if the file exists a third time", () => {
       exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
     });
 
@@ -442,6 +404,126 @@ Feature("fake-gcs alternative api feature", () => {
     });
   });
 
+  Scenario("Check if a file exists on google with readable data - first it doesn't, then it does", () => {
+    Given("the file doesn't exist twice and then it does", () => {
+      fakeGcs.exists(filePath, [ false, false, true ]);
+    });
+
+    let exists;
+    const storage = new Storage(config.gcs.credentials);
+    When("we ask if the file exists", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it doesn't exist", () => {
+      exists.should.eql([ false ]);
+    });
+
+    When("we ask if the file exists a second time", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it doesn't exist", () => {
+      exists.should.eql([ false ]);
+    });
+
+    When("we ask if the file exists a third time", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it does exist", () => {
+      exists.should.eql([ true ]);
+    });
+  });
+
+  Scenario("Trying to fake that a file exists on google using bad status", () => {
+    let error;
+    When("we try to fake that the file exists the wrong way", () => {
+      try {
+        fakeGcs.exists(filePath, "true");
+      } catch (err) {
+        error = err;
+      }
+    });
+
+    Then("we should get an error", () => {
+      error.message.should.eql("expected fileExists to be a boolean or an array");
+    });
+  });
+
+  Scenario("Check if file exists throws an error", () => {
+    Given("there's a mocked path with an error", () => {
+      fakeGcs.existsError(filePath);
+    });
+
+    When("we try to access the storage", () => {
+      const storage = new Storage(config.gcs.credentials);
+      assert.throws(() => {
+        storage.bucket("some-bucket").file("dir/file.txt");
+      }, /gcs file stream exists error/);
+    });
+  });
+
+  Scenario("Check if file exists throws a specified error", () => {
+    Given("there's a mocked path with a specified error", () => {
+      fakeGcs.existsError(filePath, "some error");
+    });
+
+    When("we try to access the storage", () => {
+      const storage = new Storage(config.gcs.credentials);
+      assert.throws(() => {
+        storage.bucket("some-bucket").file("dir/file.txt");
+      }, /some error/);
+    });
+  });
+
+  Scenario("Check if a file exists on google with readable data - using multiple calls function", () => {
+    Given("the file doesn't exist twice and then it does", () => {
+      fakeGcs.existsMultipleCalls(filePath, [ false, false, true ]);
+    });
+
+    let exists;
+    const storage = new Storage(config.gcs.credentials);
+    When("we ask if the file exists", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it doesn't exist", () => {
+      exists.should.eql([ false ]);
+    });
+
+    When("we ask if the file exists a second time", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it doesn't exist", () => {
+      exists.should.eql([ false ]);
+    });
+
+    When("we ask if the file exists a third time", () => {
+      exists = storage.bucket("some-bucket").file("dir/file.txt").exists();
+    });
+
+    Then("we verify that it does exist", () => {
+      exists.should.eql([ true ]);
+    });
+  });
+
+  Scenario("Trying to fake that a file exists on google using bad status - using multiple calls function", () => {
+    let error;
+    When("we try to fake that the file exists the wrong way", () => {
+      try {
+        fakeGcs.existsMultipleCalls(filePath, true);
+      } catch (err) {
+        error = err;
+      }
+    });
+
+    Then("we should get an error", () => {
+      error.message.should.eql("expected fileExistsArr to be an array");
+    });
+  });
+
   Scenario("Ask for a list of files with a prefix", () => {
     Given("there's a mocked list of files", () => {
       const path = filePath.split("/").slice(0, 4).join("/");
@@ -457,6 +539,32 @@ Feature("fake-gcs alternative api feature", () => {
 
     Then("we verify that there is just one", () => {
       files.should.eql([ filePath ]);
+    });
+  });
+
+  Scenario("Listing files throws an error", () => {
+    Given("there's a mocked path with an error", () => {
+      fakeGcs.listError(filePath);
+    });
+
+    When("we try to access the storage", () => {
+      const storage = new Storage(config.gcs.credentials);
+      assert.throws(() => {
+        storage.bucket("some-bucket").file("dir/file.txt");
+      }, /gcs list error/);
+    });
+  });
+
+  Scenario("Listing files throws a specified error", () => {
+    Given("there's a mocked path with a specified error", () => {
+      fakeGcs.listError(filePath, "some error");
+    });
+
+    When("we try to access the storage", () => {
+      const storage = new Storage(config.gcs.credentials);
+      assert.throws(() => {
+        storage.bucket("some-bucket").file("dir/file.txt");
+      }, /some error/);
     });
   });
 

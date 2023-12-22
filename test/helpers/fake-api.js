@@ -2,7 +2,7 @@ import nock from "nock";
 import config from "exp-config";
 import stream from "stream";
 import zlib from "zlib";
-import { getFile } from "test-data";
+import testData from "test-data";
 
 import clone from "./clone.js";
 
@@ -25,7 +25,7 @@ function init(url = proxyUrl) {
   }
 
   async function mountFile(filename, times) {
-    const { default: testRequest } = await getFile(filename);
+    const { default: testRequest } = await testData(filename);
     return mount(testRequest, times);
   }
 

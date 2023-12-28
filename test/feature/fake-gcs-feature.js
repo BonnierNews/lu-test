@@ -460,7 +460,7 @@ Feature("fake-gcs feature", () => {
     let files;
     Then("we list files", async () => {
       const storage = new Storage(config.gcs.credentials);
-      files = await storage.bucket("some-bucket").getFiles("dir/");
+      [ files ] = await storage.bucket("some-bucket").getFiles("dir/");
     });
 
     And("we should have no files", () => {
@@ -553,7 +553,7 @@ Feature("fake-gcs feature", () => {
     let files;
     When("we ask ask for a list of files", () => {
       const storage = new Storage(config.gcs.credentials);
-      files = storage.bucket("some-bucket").getFiles({ prefix: "dir/" });
+      [ files ] = storage.bucket("some-bucket").getFiles({ prefix: "dir/" });
     });
 
     Then("we verify that there is just one", () => {

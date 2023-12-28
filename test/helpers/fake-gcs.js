@@ -17,7 +17,10 @@ function mockFile(path, opts) {
   files[path] = { content: opts?.content, written: Boolean(opts?.content), encoding: opts?.encoding || "utf-8" };
 
   return bucketStub.withArgs(bucket).returns({
-    getFiles: ({ prefix }) => Object.keys(files).filter((k) => files[k]?.content && k.includes(prefix)),
+    getFiles: ({ prefix }) => {
+      // this is weird, an array inside an array. But that's what the real function returns
+      return [ Object.keys(files).filter((k) => files[k]?.content && k.includes(prefix)) ];
+    },
     file: (key) => {
       const file = files[`gs://${bucket}/${key}`];
       return {

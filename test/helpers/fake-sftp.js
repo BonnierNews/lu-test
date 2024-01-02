@@ -35,13 +35,13 @@ function get(expectedPath, content) {
 
 function getAsStream(expectedPath, content) {
   init();
-  stub.connect = () => { };
+  stub.connect = () => {};
   get(expectedPath, content);
 }
 
 function getMany(expectedFiles) {
   init();
-  stub.connect = () => { };
+  stub.connect = () => {};
   const expectedPaths = Object.keys(expectedFiles);
   stub.get = (actualPath, writeStream) => {
     assert(expectedPaths.includes(actualPath), `expected paths ${expectedPaths.join(", ")} to include ${actualPath}`);
@@ -66,7 +66,7 @@ function copy(expectedSourcePath, expectedTargetPath, content) {
   init();
   assert(content, "No content supplied");
 
-  stub.connect = () => { };
+  stub.connect = () => {};
   get(expectedSourcePath, content);
   stub.put = (buffer, actualTarget) => {
     assert(expectedTargetPath === actualTarget, `expected path ${expectedTargetPath} but got ${actualTarget}`);
@@ -79,7 +79,7 @@ function copy(expectedSourcePath, expectedTargetPath, content) {
 
 function put(expectedTargetPath) {
   init();
-  stub.connect = () => { };
+  stub.connect = () => {};
   stub.put = (readStream, actualTarget) => {
     targetPath = actualTarget;
     if (expectedTargetPath) {
@@ -97,7 +97,7 @@ function put(expectedTargetPath) {
 
 function putMany(expectedTargetPaths) {
   init();
-  stub.connect = () => { };
+  stub.connect = () => {};
   stub.put = (readStream, actualTarget) => {
     assert(
       expectedTargetPaths.includes(actualTarget),
@@ -115,7 +115,7 @@ function putMany(expectedTargetPaths) {
 
 function putError(message = "sftp put failed") {
   init();
-  stub.connect = () => { };
+  stub.connect = () => {};
   stub.put = () => {
     throw new Error(message);
   };
@@ -126,7 +126,7 @@ function list(expectedPath, expectedPattern, files) {
     assert(typeof expectedPattern === "function", `expected pattern ${expectedPattern} needs to be a function`);
   }
   init();
-  stub.connect = () => { };
+  stub.connect = () => {};
   stub.list = (actualPath, actualPattern) => {
     assert(expectedPath === actualPath, `expected path ${expectedPath} but got ${actualPath}`);
     assert(typeof actualPattern === "function", `actual pattern ${actualPattern} needs to be a function`);
@@ -140,7 +140,7 @@ function list(expectedPath, expectedPattern, files) {
 
 function listMany(expectedPaths) {
   init();
-  stub.connect = () => { };
+  stub.connect = () => {};
   expectedPaths.map((path) => {
     if (path.expectedPattern) {
       assert(
@@ -165,7 +165,7 @@ function listMany(expectedPaths) {
 
 function remove(expectedPath) {
   init();
-  stub.connect = () => { };
+  stub.connect = () => {};
   stub.exists = (actualPath) => {
     if (expectedPath === actualPath) {
       return "-";

@@ -61,7 +61,10 @@ function init(url = proxyUrl) {
     if (url === proxyUrl) mock.matchHeader("Authorization", /Bearer .*/);
 
     const statusCode = testRequest.statusCode ?? testRequest.status ?? 200;
-    const responseBody = typeof testRequest.body === "object" ? JSON.stringify(testRequest.body) : testRequest.body;
+    const responseBody =
+      typeof testRequest.body === "object" && !Buffer.isBuffer(testRequest.body)
+        ? JSON.stringify(testRequest.body)
+        : testRequest.body;
     if (testRequest.stream && testRequest.compress) {
       mock.reply(statusCode, stream.Readable.from([ responseBody ]).pipe(zlib.createGzip()), headers);
     } else if (testRequest.stream) {

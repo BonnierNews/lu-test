@@ -235,7 +235,10 @@ Feature("fake-api mount feature", () => {
     const url = `${config.gcpProxy.url}:80${path}`;
     let mount;
     Given("we fake a resource using mount", () => {
-      const request = { ...basePost, request: { ...basePost.request, headers: { "Content-Type": "application/json" } } };
+      const request = {
+        ...basePost,
+        request: { ...basePost.request, headers: { "Content-Type": "application/json" } },
+      };
       mount = fakeApi.mount(request);
     });
     let response;

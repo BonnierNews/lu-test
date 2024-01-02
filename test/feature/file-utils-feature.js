@@ -59,9 +59,11 @@ Feature("file-utils feature", () => {
       response = fileUtils.modifyFile(jsonLines, (row) => row.header1);
     });
     Then("we should have received a list with only headers", () => {
-      const expectedData = array.map((row) => {
-        return `"${row.header1}"`;
-      }).join("\n");
+      const expectedData = array
+        .map((row) => {
+          return `"${row.header1}"`;
+        })
+        .join("\n");
       response.should.eql(`${expectedData}\n`);
     });
   });

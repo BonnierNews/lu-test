@@ -28,6 +28,7 @@ Feature("run-sequence feature", () => {
           ],
         },
         attributes: { key: "sequence.some-sequence.processed" },
+        deliveryAttempt: 1,
         triggeredFlows: [ "sequence.some-sequence" ],
       });
     });

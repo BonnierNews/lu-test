@@ -50,11 +50,13 @@ Feature("fake-pub-sub feature", () => {
           topic: "some-topic",
           message: {},
           attributes: { key: "sequence.some-sequence.perform.something-else" },
+          deliveryAttempt: 1,
         },
         {
           topic: "some-topic",
           message: { data: [ { type: "step2", id: "some-other-id" } ] },
           attributes: { key: "sequence.some-sequence.processed" },
+          deliveryAttempt: 1,
         },
       ]);
     });

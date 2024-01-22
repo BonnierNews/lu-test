@@ -26,7 +26,7 @@ function enablePublish(broker) {
           topic,
           message: message.json,
           attributes: message.attributes,
-          // deliveryAttempt: message.deliveryAttempt || 1,
+          deliveryAttempt: message.deliveryAttempt || 1,
         });
         if (topic !== config.deadLetterTopic) {
           const messageHandlerRes = await publish(
@@ -46,16 +46,16 @@ function enablePublish(broker) {
 async function triggerMessage(
   broker,
   messageData,
-  attributes
+  attributes,
   { deliveryAttempt = 1, messageId = "some-id", publishTime = "123" } = {}
 ) {
-  return await publish(broker, messageData, attributes); // , { deliveryAttempt, messageId, publishTime });
+  return await publish(broker, messageData, attributes, { deliveryAttempt, messageId, publishTime });
 }
 
 async function publish(
   app,
   messageData,
-  attributes
+  attributes,
   { deliveryAttempt = 1, messageId = "some-id", publishTime = "123" } = {}
 ) {
   const data = Buffer.isBuffer(messageData) ? JSON.parse(messageData.toString("utf-8")) : messageData;

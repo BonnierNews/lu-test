@@ -32,7 +32,7 @@ function enablePublish(broker) {
           const messageHandlerRes = await publish(
             broker,
             message.json,
-            message.attributes
+            message.attributes,
             { deliveryAttempt: message.deliveryAttempt || 1 }
           );
           messageHandlerResponses.push(messageHandlerRes);

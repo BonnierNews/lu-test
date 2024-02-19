@@ -65,7 +65,7 @@ function readWithPathError(path, message = "gcs file stream read error") {
   mockFile(path, {}).throws(err);
 }
 
-function exists(path, fileExists) {
+function exists(path, fileExists = true) {
   if (typeof fileExists === "boolean") {
     mockFile(path, { content: fileExists ? "exists" : undefined });
   } else if (Array.isArray(fileExists)) {

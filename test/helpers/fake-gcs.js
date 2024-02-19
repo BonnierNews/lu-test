@@ -37,7 +37,7 @@ function mockFile(path, opts) {
           file?.written
             ? {
               name: key.split("/").pop(),
-              size: new Blob([ file.content ]).size,
+              size: opts.size || new Blob([ file.content ]).size,
               contentEncoding: file.encoding,
               contentType: contentType(key),
             }

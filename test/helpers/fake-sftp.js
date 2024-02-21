@@ -3,6 +3,7 @@ import SftpClient from "ssh2-sftp-client";
 import { createSandbox } from "sinon";
 import { Readable } from "stream";
 import assert from "assert";
+import * as buff from "buffer";
 
 let writes = {};
 let removes = {};
@@ -77,7 +78,7 @@ function copy(expectedSourcePath, expectedTargetPath, content) {
   };
 }
 
-function put(expectedTargetPath) {
+function put(expectedTargetPath, opts) {
   init();
   stub.connect = () => {};
   stub.put = (readStream, actualTarget) => {
@@ -87,6 +88,9 @@ function put(expectedTargetPath) {
     }
     return new Promise((resolve) => {
       const writer = es.wait((_, data) => {
+        if (opts?.encoding) {
+          data = buff.transcode(Buffer.from(data), "utf8", opts.encoding);
+        }
         writes[actualTarget] = data;
         return resolve();
       });

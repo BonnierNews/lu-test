@@ -188,6 +188,30 @@ Feature("fake-sftp put feature", () => {
       response.message.should.eql("sftp put failed");
     });
   });
+
+  Scenario("successfully fake putting a file with opts", () => {
+    Given("we fake putting to some path", () => {
+      fakeSftp.put(path, { encoding: "latin1" });
+    });
+    let client;
+    And("we can connect to an sftp", async () => {
+      client = new SftpClient();
+      await client.connect(sftpConfig);
+    });
+    When("uploading some data to the sftp", async () => {
+      const content = Readable.from(data);
+      await client.put(content, path);
+    });
+    Then("the data should have been written", () => {
+      fakeSftp.written(path).should.eql(data);
+    });
+    And("we can get the data as a buffer too", () => {
+      fakeSftp.writtenAsBuffer(path).toString().should.eql(data);
+    });
+    And("the targetPath should be the expected", () => {
+      fakeSftp.getTargetPath().should.eql(path);
+    });
+  });
 });
 
 Feature("fake-sftp get feature", () => {

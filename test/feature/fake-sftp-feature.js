@@ -255,8 +255,8 @@ Feature("fake-sftp get feature", () => {
   Scenario("successfully fake getting some files", () => {
     Given("we fake getting some files", () => {
       const expectedFileContent = {};
-      expectedFileContent[ `${path}/${file}` ] = data;
-      expectedFileContent[ `${otherPath}/${otherFile}` ] = data;
+      expectedFileContent[`${path}/${file}`] = data;
+      expectedFileContent[`${otherPath}/${otherFile}`] = data;
       fakeSftp.getManyAsStream(expectedFileContent);
     });
     let client;

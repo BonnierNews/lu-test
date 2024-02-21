@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import SftpClient from "ssh2-sftp-client";
 import { Readable, Writable } from "stream";
+import buffer from "buffer";
 
 import * as fakeSftp from "../helpers/fake-sftp.js";
 
@@ -186,6 +187,33 @@ Feature("fake-sftp put feature", () => {
     });
     Then("we should receive an error that the put failed", () => {
       response.message.should.eql("sftp put failed");
+    });
+  });
+
+  Scenario("successfully fake putting a file with opts", () => {
+    Given("we fake putting to some path", () => {
+      fakeSftp.put(path, { encoding: "latin1" });
+    });
+    let client;
+    And("we can connect to an sftp", async () => {
+      client = new SftpClient();
+      await client.connect(sftpConfig);
+    });
+    let expectedData;
+    When("uploading some data to the sftp", async () => {
+      const weirdData = "döta";
+      expectedData = buffer.transcode(Buffer.from(weirdData), "utf8", "latin1").toString();
+      const content = Readable.from(weirdData);
+      await client.put(content, path);
+    });
+    Then("the data should have been written", () => {
+      fakeSftp.written(path).should.eql(expectedData);
+    });
+    And("we can get the data as a buffer too", () => {
+      fakeSftp.writtenAsBuffer(path).toString().should.eql(expectedData);
+    });
+    And("the targetPath should be the expected", () => {
+      fakeSftp.getTargetPath().should.eql(path);
     });
   });
 });

@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import SftpClient from "ssh2-sftp-client";
 import { Readable, Writable } from "stream";
+import buffer from "buffer";
 
 import * as fakeSftp from "../helpers/fake-sftp.js";
 
@@ -198,15 +199,18 @@ Feature("fake-sftp put feature", () => {
       client = new SftpClient();
       await client.connect(sftpConfig);
     });
+    let expectedData;
     When("uploading some data to the sftp", async () => {
-      const content = Readable.from(data);
+      const weirdData = "döta";
+      expectedData = buffer.transcode(Buffer.from(weirdData), "utf8", "latin1").toString();
+      const content = Readable.from(weirdData);
       await client.put(content, path);
     });
     Then("the data should have been written", () => {
-      fakeSftp.written(path).should.eql(data);
+      fakeSftp.written(path).should.eql(expectedData);
     });
     And("we can get the data as a buffer too", () => {
-      fakeSftp.writtenAsBuffer(path).toString().should.eql(data);
+      fakeSftp.writtenAsBuffer(path).toString().should.eql(expectedData);
     });
     And("the targetPath should be the expected", () => {
       fakeSftp.getTargetPath().should.eql(path);
@@ -251,8 +255,8 @@ Feature("fake-sftp get feature", () => {
   Scenario("successfully fake getting some files", () => {
     Given("we fake getting some files", () => {
       const expectedFileContent = {};
-      expectedFileContent[`${path}/${file}`] = data;
-      expectedFileContent[`${otherPath}/${otherFile}`] = data;
+      expectedFileContent[ `${path}/${file}` ] = data;
+      expectedFileContent[ `${otherPath}/${otherFile}` ] = data;
       fakeSftp.getManyAsStream(expectedFileContent);
     });
     let client;

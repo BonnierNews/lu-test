@@ -156,5 +156,14 @@ export const app = start({
         }),
       ],
     },
+    {
+      namespace: "sequence",
+      name: "error-sequence",
+      sequence: [
+        route(".perform.something", () => {
+          throw new Error("Something went wrong");
+        }),
+      ],
+    },
   ],
 });

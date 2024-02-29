@@ -538,7 +538,7 @@ Feature("fake-gcs alternative api feature", () => {
     });
 
     Then("we verify that there is just one", () => {
-      files.should.eql([ filePath ]);
+      files.should.eql([ { id: filePath, name: filePath.replace("gs://some-bucket", "") } ]);
     });
   });
 

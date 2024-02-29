@@ -29,12 +29,7 @@ function enablePublish(broker) {
           deliveryAttempt: message.deliveryAttempt || 1,
         });
         if (topic !== config.deadLetterTopic) {
-          const messageHandlerRes = await publish(
-            broker,
-            message.json,
-            message.attributes,
-            { deliveryAttempt: message.deliveryAttempt || 1 }
-          );
+          const messageHandlerRes = await publish(broker, message.json, message.attributes, { deliveryAttempt: message.deliveryAttempt || 1 });
           messageHandlerResponses.push(messageHandlerRes);
           return "some-message-id";
         }

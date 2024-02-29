@@ -14,12 +14,22 @@ function mockFile(path, opts) {
 
   if (files[path]) throw new Error(`${path} has already been mocked`);
 
-  files[path] = { content: opts?.content, written: Boolean(opts?.content), encoding: opts?.encoding || "utf-8" };
+  files[path] = {
+    id: path,
+    content: opts?.content,
+    written: Boolean(opts?.content),
+    encoding: opts?.encoding || "utf-8",
+    name: path.replace(`gs://${bucket}`, ""),
+  };
 
   return bucketStub.withArgs(bucket).returns({
     getFiles: ({ prefix }) => {
       // this is weird, an array inside an array. But that's what the real function returns
-      return [ Object.keys(files).filter((k) => files[k]?.content && k.includes(prefix)) ];
+      return [
+        Object.values(files)
+          .filter((f) => f.content && f.id.includes(prefix))
+          .map(({ id, name }) => ({ id, name })),
+      ];
     },
     file: (key) => {
       const file = files[`gs://${bucket}/${key}`];

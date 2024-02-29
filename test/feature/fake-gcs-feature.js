@@ -338,12 +338,14 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we should have got some metadata", () => {
-      metadata.should.eql({
-        contentEncoding: "utf-8",
-        contentType: "text/csv",
-        name: "file_1.csv",
-        size: 14,
-      });
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "text/csv",
+          name: "file_1.csv",
+          size: 14,
+        },
+      ]);
     });
   });
 
@@ -359,12 +361,14 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we should have got some metadata", () => {
-      metadata.should.eql({
-        contentEncoding: "utf-8",
-        contentType: "application/json",
-        name: "file_1.json",
-        size: 15,
-      });
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "application/json",
+          name: "file_1.json",
+          size: 15,
+        },
+      ]);
     });
   });
 
@@ -380,12 +384,14 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we should have got some metadata", () => {
-      metadata.should.eql({
-        contentEncoding: "utf-8",
-        contentType: "application/gzip",
-        name: "file_1.json.gz",
-        size: 35,
-      });
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "application/gzip",
+          name: "file_1.json.gz",
+          size: 35,
+        },
+      ]);
     });
   });
 
@@ -401,12 +407,14 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we should have got some metadata", () => {
-      metadata.should.eql({
-        contentEncoding: "utf-8",
-        contentType: "text/plain",
-        name: "file_1.txt",
-        size: 9,
-      });
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "text/plain",
+          name: "file_1.txt",
+          size: 9,
+        },
+      ]);
     });
   });
 
@@ -422,12 +430,14 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we should have got some metadata", () => {
-      metadata.should.eql({
-        contentEncoding: "utf-8",
-        contentType: "application/octet-stream",
-        name: "file_1",
-        size: 9,
-      });
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "application/octet-stream",
+          name: "file_1",
+          size: 9,
+        },
+      ]);
     });
   });
 

@@ -45,12 +45,14 @@ function mockFile(path, opts) {
         delete: () => delete files[`gs://${bucket}/${key}`],
         getMetadata: () =>
           file?.written
-            ? {
-              name: key.split("/").pop(),
-              size: new Blob([ file.content ]).size,
-              contentEncoding: file.encoding,
-              contentType: contentType(key),
-            }
+            ? [
+              {
+                name: key.split("/").pop(),
+                size: new Blob([ file.content ]).size,
+                contentEncoding: file.encoding,
+                contentType: contentType(key),
+              },
+            ]
             : undefined,
       };
     },

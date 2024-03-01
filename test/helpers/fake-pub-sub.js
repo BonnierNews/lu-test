@@ -42,16 +42,16 @@ async function triggerMessage(
   broker,
   messageData,
   attributes,
-  { deliveryAttempt = 1, messageId = "some-id", publishTime = "123" } = {}
+  { deliveryAttempt = 1, messageId = "some-id", publishTime = "123", throwOnError = true } = {}
 ) {
-  return await publish(broker, messageData, attributes, { deliveryAttempt, messageId, publishTime });
+  return await publish(broker, messageData, attributes, { deliveryAttempt, messageId, publishTime, throwOnError });
 }
 
 async function publish(
   app,
   messageData,
   attributes,
-  { deliveryAttempt = 1, messageId = "some-id", publishTime = "123" } = {}
+  { deliveryAttempt = 1, messageId = "some-id", publishTime = "123", throwOnError = true } = {}
 ) {
   const data = Buffer.isBuffer(messageData) ? JSON.parse(messageData.toString("utf-8")) : messageData;
   const message = {
@@ -65,7 +65,15 @@ async function publish(
     deliveryAttempt,
   };
   try {
-    return await requestAgent.post("/message").send(message);
+    const response = await requestAgent.post("/message").send(message);
+    if (throwOnError && response.status >= 400) {
+      const error = Error(`Got error when publishing message ${JSON.stringify(message)}`);
+      error.statusCode = response.status;
+      error.body = response.body;
+      error.text = response.text;
+      throw error;
+    }
+    return response;
     /* c8 ignore next 4 */
   } catch (error) {
     console.error("Error in fake-pub-sub :>> ", error); // eslint-disable-line no-console

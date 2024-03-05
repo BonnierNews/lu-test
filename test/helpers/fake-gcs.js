@@ -16,8 +16,8 @@ function mockFile(path, opts) {
 
   files[path] = {
     id: path,
-    content: opts?.content,
-    written: Boolean(opts?.content),
+    content: opts?.content !== undefined ? opts.content : undefined,
+    written: opts?.content !== undefined,
     encoding: opts?.encoding || "utf-8",
     name: path.replace(`gs://${bucket}`, ""),
   };
@@ -36,10 +36,11 @@ function mockFile(path, opts) {
       return {
         createWriteStream: getWriter(file),
         createReadStream: () => {
-          if (file.written && !file.content) {
+          if (file.written && file.content === undefined) {
             file.content = "";
           }
-          return Readable.from(file?.content, { encoding: file.encoding });
+          const text = Buffer.isBuffer(file?.content) ? file?.content.toString(file.encoding) : file?.content;
+          return Readable.from(`${text}`, { encoding: file.encoding });
         },
         exists: () => [ Boolean(file.written) ],
         delete: () => delete files[`gs://${bucket}/${key}`],

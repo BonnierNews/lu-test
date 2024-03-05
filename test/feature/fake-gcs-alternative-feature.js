@@ -10,6 +10,8 @@ const pipeline = promisify(stream.pipeline);
 
 const filePath = "gs://some-bucket/dir/file.txt";
 
+// These are the tests for the old fake-s3 interface, rewritten to GCS
+
 Feature("fake-gcs alternative api feature", () => {
   beforeEachScenario(fakeGcs.reset);
   Scenario("Write a file to google", () => {

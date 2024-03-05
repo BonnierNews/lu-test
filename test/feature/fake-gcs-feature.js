@@ -326,6 +326,87 @@ Feature("fake-gcs feature", () => {
     });
   });
 
+  Scenario("Read a file containing an empty string", () => {
+    Given("there's a readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "" });
+    });
+
+    const readOne = [];
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
+
+      await pipeline(readStream, async function* (iterable) {
+        for await (const data of iterable) {
+          readOne.push(data);
+          yield;
+        }
+      });
+    });
+
+    Then("we should have read an empty string", () => {
+      readOne.join("").should.eql("");
+    });
+  });
+
+  Scenario("Read files containing falsy values", () => {
+    Given("there's a readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: false });
+      fakeGcs.mockFile("gs://some-bucket/dir/file_2.txt", { content: 0 });
+    });
+
+    const readOne = [];
+    const readTwo = [];
+    When("we try to read the files", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
+
+      await pipeline(readStream, async function* (iterable) {
+        for await (const data of iterable) {
+          readOne.push(data);
+          yield;
+        }
+      });
+
+      const readStream2 = storage.bucket("some-bucket").file("dir/file_2.txt").createReadStream();
+
+      await pipeline(readStream2, async function* (iterable) {
+        for await (const data of iterable) {
+          readTwo.push(data);
+          yield;
+        }
+      });
+    });
+
+    Then("we should have read the falsy values", () => {
+      readOne.join("").should.eql("false");
+      readTwo.join("").should.eql("0");
+    });
+  });
+
+  Scenario("Read a file containing another falsy value", () => {
+    Given("there's a readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: 0 });
+    });
+
+    const readOne = [];
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
+
+      await pipeline(readStream, async function* (iterable) {
+        for await (const data of iterable) {
+          readOne.push(data);
+          yield;
+        }
+      });
+    });
+
+    Then("we should have read an empty string", () => {
+      readOne.join("").should.eql("0");
+    });
+  });
+
   Scenario("Get a csv file's metadata from google", () => {
     Given("there's a file", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "some,csv,file\n" });

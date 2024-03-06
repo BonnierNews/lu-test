@@ -74,7 +74,10 @@ Feature("run-sequence feature", () => {
         },
         attributes: { key: "sequence.trigger-other-sequence.processed" },
         deliveryAttempt: 1,
-        triggeredFlows: [ "sequence.trigger-other-sequence" ],
+        triggeredFlows: [
+          "sequence.trigger-other-sequence",
+          "sequence.some-sequence",
+        ],
       });
     });
   });

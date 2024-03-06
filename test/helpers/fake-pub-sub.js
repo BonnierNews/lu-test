@@ -22,15 +22,15 @@ function enablePublish(broker, { skipSequences = [] } = {}) {
   stub.topic = (topic) => {
     return {
       publishMessage: async (message) => {
-        if (skipSequences.some((s) => message?.attributes?.key.startsWith(s))) {
-          return "some-skipped-message-id";
-        }
         messages.push({
           topic,
           message: message.json,
           attributes: message.attributes,
           deliveryAttempt: message.deliveryAttempt || 1,
         });
+        if (skipSequences.some((s) => message?.attributes?.key.startsWith(s))) {
+          return "some-skipped-message-id";
+        }
         if (topic !== config.deadLetterTopic) {
           const messageHandlerRes = await publish(broker, message.json, message.attributes, { deliveryAttempt: message.deliveryAttempt || 1 });
           messageHandlerResponses.push(messageHandlerRes);

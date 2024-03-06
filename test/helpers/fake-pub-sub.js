@@ -16,12 +16,15 @@ function init() {
 }
 
 let requestAgent;
-function enablePublish(broker) {
+function enablePublish(broker, { skipSequences = [] } = {}) {
   init();
   requestAgent = supertest.agent(broker);
   stub.topic = (topic) => {
     return {
       publishMessage: async (message) => {
+        if (skipSequences.some((s) => message?.attributes?.key.startsWith(s))) {
+          return "some-skipped-message-id";
+        }
         messages.push({
           topic,
           message: message.json,
@@ -42,16 +45,16 @@ async function triggerMessage(
   broker,
   messageData,
   attributes,
-  { deliveryAttempt = 1, messageId = "some-id", publishTime = "123", throwOnError = true } = {}
+  { deliveryAttempt = 1, messageId = "some-id", publishTime = "123" } = {}
 ) {
-  return await publish(broker, messageData, attributes, { deliveryAttempt, messageId, publishTime, throwOnError });
+  return await publish(broker, messageData, attributes, { deliveryAttempt, messageId, publishTime });
 }
 
 async function publish(
   app,
   messageData,
   attributes,
-  { deliveryAttempt = 1, messageId = "some-id", publishTime = "123", throwOnError = true } = {}
+  { deliveryAttempt = 1, messageId = "some-id", publishTime = "123" } = {}
 ) {
   const data = Buffer.isBuffer(messageData) ? JSON.parse(messageData.toString("utf-8")) : messageData;
   const message = {
@@ -66,7 +69,7 @@ async function publish(
   };
   try {
     const response = await requestAgent.post("/message").send(message);
-    if (throwOnError && response.status >= 400) {
+    if (response.status >= 400) {
       const error = Error(`Got error when publishing message ${JSON.stringify(message)}`);
       error.statusCode = response.status;
       error.body = response.body;

@@ -47,4 +47,35 @@ Feature("run-sequence feature", () => {
       response.message.should.eql("Sequence not processed, see log");
     });
   });
+
+  Scenario("run sequence skipping certain keys", () => {
+    let response;
+    When("running the sequence", async () => {
+      response = await runSequence(
+        app,
+        "sequence.trigger-other-sequence",
+        message,
+        { skipSequences: [ "sequence.some-sequence" ] }
+      );
+    });
+
+    Then("we should should have a processed sequence without the skipped step", () => {
+      response.should.eql({
+        topic: "some-topic",
+        message: {
+          id: "some-guid",
+          type: "something",
+          attributes: { name: "Someone" },
+          meta: {},
+          data: [
+            { type: "step1", id: "some-id" },
+            { type: "trigger", key: "sequence.some-sequence" },
+          ],
+        },
+        attributes: { key: "sequence.trigger-other-sequence.processed" },
+        deliveryAttempt: 1,
+        triggeredFlows: [ "sequence.trigger-other-sequence" ],
+      });
+    });
+  });
 });

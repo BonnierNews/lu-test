@@ -66,11 +66,21 @@ function parseBody(body) {
   };
 }
 
+export const messageCounts = {};
+
+export function resetMessageCounts() {
+  for (const key in messageCounts) {
+    delete messageCounts[key];
+  }
+}
+
 async function messageHandler(recipeMap, req, res) {
   const messageData = parseBody(req.body);
   const { key } = messageData.attributes;
   const { message } = messageData;
   const data = [ ...(message.data ?? []) ];
+
+  messageCounts[key] = (messageCounts[key] || 0) + 1;
 
   if (key.endsWith("processed")) {
     res.status(200).send();
@@ -184,6 +194,15 @@ export const app = start({
         }),
         route(".perform.trigger", () => {
           return { type: "trigger", key: "sequence.some-sequence" };
+        }),
+      ],
+    },
+    {
+      namespace: "sequence",
+      name: "trigger-itself",
+      sequence: [
+        route(".perform.trigger", () => {
+          return { type: "trigger", key: "sequence.trigger-itself" }; // Yes, this is an infinite loop
         }),
       ],
     },

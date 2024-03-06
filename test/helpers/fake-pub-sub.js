@@ -16,9 +16,10 @@ function init() {
 }
 
 let requestAgent;
-function enablePublish(broker, { skipSequences = [] } = {}) {
+function enablePublish(broker, { skipSequences = [], maxRunsForKey = {} } = {}) {
   init();
   requestAgent = supertest.agent(broker);
+  const keyCounts = {};
   stub.topic = (topic) => {
     return {
       publishMessage: async (message) => {
@@ -28,7 +29,13 @@ function enablePublish(broker, { skipSequences = [] } = {}) {
           attributes: message.attributes,
           deliveryAttempt: message.deliveryAttempt || 1,
         });
-        if (skipSequences.some((s) => message?.attributes?.key.startsWith(s))) {
+        keyCounts[message.attributes.key] = (keyCounts[message.attributes.key] || 0) + 1;
+
+        const key = message?.attributes?.key;
+        if (
+          skipSequences.some((s) => key.startsWith(s)) ||
+          keyCounts[message.attributes.key] > (maxRunsForKey[message.attributes.key] || Infinity)
+        ) {
           return "some-skipped-message-id";
         }
         if (topic !== config.deadLetterTopic) {

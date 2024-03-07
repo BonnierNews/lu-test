@@ -499,6 +499,29 @@ Feature("fake-gcs feature", () => {
     });
   });
 
+  Scenario("Get an empty csv file's metadata from google", () => {
+    Given("there's an empty file", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "" });
+    });
+
+    let metadata;
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      metadata = await storage.bucket("some-bucket").file("dir/file_1.csv").getMetadata();
+    });
+
+    Then("we should have got some metadata", () => {
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "text/csv",
+          name: "file_1.csv",
+          size: 0,
+        },
+      ]);
+    });
+  });
+
   Scenario("Get an unknown file's metadata from google", () => {
     Given("there's a file", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1", { content: "some data" });

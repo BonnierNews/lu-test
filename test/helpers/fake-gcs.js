@@ -49,7 +49,7 @@ function mockFile(path, opts) {
             ? [
               {
                 name: key.split("/").pop(),
-                size: new Blob([ file.content ]).size,
+                size: file.content ? new Blob([ file.content ]).size : 0,
                 contentEncoding: file.encoding,
                 contentType: contentType(key),
               },

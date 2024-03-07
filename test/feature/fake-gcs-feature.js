@@ -516,7 +516,7 @@ Feature("fake-gcs feature", () => {
           contentEncoding: "utf-8",
           contentType: "text/csv",
           name: "file_1.csv",
-          size: 0,
+          size: "0",
         },
       ]);
     });

@@ -49,7 +49,9 @@ function mockFile(path, opts) {
             ? [
               {
                 name: key.split("/").pop(),
-                size: file.content ? new Blob([ file.content ]).size : 0,
+                // when logging the metadata size of an empty file, the gcs lib returned 0 as a string
+                // we do not know how it behaves with other values
+                size: file.content ? new Blob([ file.content ]).size : "0",
                 contentEncoding: file.encoding,
                 contentType: contentType(key),
               },

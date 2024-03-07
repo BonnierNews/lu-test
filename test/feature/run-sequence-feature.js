@@ -1,5 +1,5 @@
 import runSequence from "../helpers/run-sequence.js";
-import { app } from "../utils/broker.js";
+import { app, messageCounts, resetMessageCounts } from "../utils/broker.js";
 
 const message = {
   id: "some-guid",
@@ -9,6 +9,8 @@ const message = {
 };
 
 Feature("run-sequence feature", () => {
+  beforeEachScenario(resetMessageCounts);
+
   Scenario("successfully run a sequence", () => {
     let response;
     When("running the sequence", async () => {
@@ -74,8 +76,26 @@ Feature("run-sequence feature", () => {
         },
         attributes: { key: "sequence.trigger-other-sequence.processed" },
         deliveryAttempt: 1,
-        triggeredFlows: [ "sequence.trigger-other-sequence" ],
+        triggeredFlows: [
+          "sequence.trigger-other-sequence",
+          "sequence.some-sequence",
+        ],
       });
+    });
+  });
+
+  Scenario("run infinite sequence skipping itself after an 3 runs", () => {
+    When("running the sequence", async () => {
+      await runSequence(
+        app,
+        "sequence.trigger-itself",
+        message,
+        { maxRunsForKey: { "sequence.trigger-itself.perform.trigger": 3 } }
+      );
+    });
+
+    Then("we should only have processed the sequence 3 times", () => {
+      messageCounts["sequence.trigger-itself.perform.trigger"].should.eql(3);
     });
   });
 });

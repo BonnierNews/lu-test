@@ -92,7 +92,7 @@ Feature("fake-ftp feature", () => {
 
   Scenario("successfully fake putting a file as a buffer with encoding", () => {
     const specialData = "some ä å ö , . - data";
-    const specialDataInLatin1 = buffer.transcode(Buffer.from(specialData), "latin1", "utf8").toString();
+    const specialDataInLatin1 = buffer.transcode(Buffer.from(specialData), "utf8", "latin1");
     Given("we fake putting to some path", () => {
       fakeFTP.put(path);
     });
@@ -106,11 +106,11 @@ Feature("fake-ftp feature", () => {
       }
     });
     When("uploading some data to the ftp", async () => {
-      const content = Readable.from(Buffer.from(specialData));
+      const content = Readable.from(specialDataInLatin1);
       await client.uploadFrom(content, path);
     });
     Then("the data should have been written", () => {
-      fakeFTP.written(path, { encoding: "latin1" }).should.eql(specialDataInLatin1);
+      fakeFTP.written(path, { encoding: "latin1" }).should.eql(specialData);
     });
   });
 

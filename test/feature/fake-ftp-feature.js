@@ -89,6 +89,30 @@ Feature("fake-ftp feature", () => {
     });
   });
 
+  Scenario("successfully fake putting a file as a buffer with encoding", () => {
+    const specialData = "some ä å ö , . - data";
+    const specialDataInLatin1 = "some Ã¤ Ã¥ Ã¶ , . - data";
+    Given("we fake putting to some path", () => {
+      fakeFTP.put(path);
+    });
+    let client;
+    And("we can connect to an ftp", async () => {
+      client = new ftp.Client();
+      try {
+        await client.access(ftpConfig);
+      } catch (error) {
+        console.error(error); // eslint-disable-line no-console
+      }
+    });
+    When("uploading some data to the ftp", async () => {
+      const content = Readable.from(Buffer.from(specialData));
+      await client.uploadFrom(content, path);
+    });
+    Then("the data should have been written", () => {
+      fakeFTP.written(path, { encoding: "latin1" }).should.eql(specialDataInLatin1);
+    });
+  });
+
   Scenario("successfully fake putting a couple of files", () => {
     const otherPath = "/some-other-path";
     const otherData = "some other data";

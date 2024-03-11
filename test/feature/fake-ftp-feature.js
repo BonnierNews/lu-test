@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import ftp from "basic-ftp";
 import { Readable } from "stream";
+import buffer from "buffer";
 
 import * as fakeFTP from "../helpers/fake-ftp.js";
 
@@ -91,7 +92,7 @@ Feature("fake-ftp feature", () => {
 
   Scenario("successfully fake putting a file as a buffer with encoding", () => {
     const specialData = "some ä å ö , . - data";
-    const specialDataInLatin1 = "some Ã¤ Ã¥ Ã¶ , . - data";
+    const specialDataInLatin1 = buffer.transcode(Buffer.from(specialData), "latin1", "utf8").toString();
     Given("we fake putting to some path", () => {
       fakeFTP.put(path);
     });

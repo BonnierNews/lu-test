@@ -14,33 +14,48 @@ function mockFile(path, opts) {
 
   if (files[path]) throw new Error(`${path} has already been mocked`);
 
-  files[path] = { content: opts?.content, written: Boolean(opts?.content), encoding: opts?.encoding || "utf-8" };
+  files[path] = {
+    id: path,
+    content: opts?.content !== undefined ? opts.content : undefined,
+    written: opts?.content !== undefined,
+    encoding: opts?.encoding || "utf-8",
+    name: path.replace(`gs://${bucket}`, ""),
+  };
 
   return bucketStub.withArgs(bucket).returns({
     getFiles: ({ prefix }) => {
       // this is weird, an array inside an array. But that's what the real function returns
-      return [ Object.keys(files).filter((k) => files[k]?.content && k.includes(prefix)) ];
+      return [
+        Object.values(files)
+          .filter((f) => f.content && f.id.includes(prefix))
+          .map(({ id, name }) => ({ id, name })),
+      ];
     },
     file: (key) => {
       const file = files[`gs://${bucket}/${key}`];
       return {
         createWriteStream: getWriter(file),
         createReadStream: () => {
-          if (file.written && !file.content) {
+          if (file.written && file.content === undefined) {
             file.content = "";
           }
-          return Readable.from(file?.content, { encoding: file.encoding });
+          const text = Buffer.isBuffer(file?.content) ? file?.content.toString(file.encoding) : file?.content;
+          return Readable.from(`${text}`, { encoding: file.encoding });
         },
         exists: () => [ Boolean(file.written) ],
         delete: () => delete files[`gs://${bucket}/${key}`],
         getMetadata: () =>
           file?.written
-            ? {
-              name: key.split("/").pop(),
-              size: new Blob([ file.content ]).size,
-              contentEncoding: file.encoding,
-              contentType: contentType(key),
-            }
+            ? [
+              {
+                name: key.split("/").pop(),
+                // when logging the metadata size of an empty file, the gcs lib returned 0 as a string
+                // we do not know how it behaves with other values
+                size: file.content ? new Blob([ file.content ]).size : "0",
+                contentEncoding: file.encoding,
+                contentType: contentType(key),
+              },
+            ]
             : undefined,
       };
     },

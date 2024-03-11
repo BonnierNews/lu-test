@@ -16,9 +16,10 @@ function init() {
 }
 
 let requestAgent;
-function enablePublish(broker) {
+function enablePublish(broker, { skipSequences = [], maxRunsForKey = {} } = {}) {
   init();
   requestAgent = supertest.agent(broker);
+  const keyCounts = {};
   stub.topic = (topic) => {
     return {
       publishMessage: async (message) => {
@@ -28,13 +29,17 @@ function enablePublish(broker) {
           attributes: message.attributes,
           deliveryAttempt: message.deliveryAttempt || 1,
         });
+        keyCounts[message.attributes.key] = (keyCounts[message.attributes.key] || 0) + 1;
+
+        const key = message?.attributes?.key;
+        if (
+          skipSequences.some((s) => key.startsWith(s)) ||
+          keyCounts[message.attributes.key] > (maxRunsForKey[message.attributes.key] || Infinity)
+        ) {
+          return "some-skipped-message-id";
+        }
         if (topic !== config.deadLetterTopic) {
-          const messageHandlerRes = await publish(
-            broker,
-            message.json,
-            message.attributes,
-            { deliveryAttempt: message.deliveryAttempt || 1 }
-          );
+          const messageHandlerRes = await publish(broker, message.json, message.attributes, { deliveryAttempt: message.deliveryAttempt || 1 });
           messageHandlerResponses.push(messageHandlerRes);
           return "some-message-id";
         }
@@ -70,7 +75,15 @@ async function publish(
     deliveryAttempt,
   };
   try {
-    return await requestAgent.post("/message").send(message);
+    const response = await requestAgent.post("/message").send(message);
+    if (response.status >= 400) {
+      const error = Error(`Got error when publishing message ${JSON.stringify(message)}`);
+      error.statusCode = response.status;
+      error.body = response.body;
+      error.text = response.text;
+      throw error;
+    }
+    return response;
     /* c8 ignore next 4 */
   } catch (error) {
     console.error("Error in fake-pub-sub :>> ", error); // eslint-disable-line no-console

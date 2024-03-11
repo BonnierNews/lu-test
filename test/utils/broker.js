@@ -66,11 +66,21 @@ function parseBody(body) {
   };
 }
 
+export const messageCounts = {};
+
+export function resetMessageCounts() {
+  for (const key in messageCounts) {
+    delete messageCounts[key];
+  }
+}
+
 async function messageHandler(recipeMap, req, res) {
   const messageData = parseBody(req.body);
   const { key } = messageData.attributes;
   const { message } = messageData;
   const data = [ ...(message.data ?? []) ];
+
+  messageCounts[key] = (messageCounts[key] || 0) + 1;
 
   if (key.endsWith("processed")) {
     res.status(200).send();
@@ -91,8 +101,20 @@ async function messageHandler(recipeMap, req, res) {
 
   const result = await handler(message);
   const newData = [ ...data ];
+
+  const pubsub = new PubSub();
+  const messagePublisher = await pubsub.topic("some-topic");
+
   if (result) {
     newData.push(result);
+
+    if (result.type === "trigger") {
+      const triggerKey = recipeMap.first(result.key);
+      await messagePublisher.publishMessage({
+        json: { ...message },
+        attributes: { key: triggerKey },
+      });
+    }
   }
 
   const nextStep = recipeMap.next(key);
@@ -101,8 +123,6 @@ async function messageHandler(recipeMap, req, res) {
     return;
   }
 
-  const pubsub = new PubSub();
-  const messagePublisher = await pubsub.topic("some-topic");
   await messagePublisher.publishMessage({
     json: { ...message, data: newData },
     attributes: { key: nextStep },
@@ -153,6 +173,36 @@ export const app = start({
       sequence: [
         route(".perform.something", () => {
           return { type: "step1", id: "some-id" };
+        }),
+      ],
+    },
+    {
+      namespace: "sequence",
+      name: "error-sequence",
+      sequence: [
+        route(".perform.something", () => {
+          throw new Error("Something went wrong");
+        }),
+      ],
+    },
+    {
+      namespace: "sequence",
+      name: "trigger-other-sequence",
+      sequence: [
+        route(".perform.something", () => {
+          return { type: "step1", id: "some-id" };
+        }),
+        route(".perform.trigger", () => {
+          return { type: "trigger", key: "sequence.some-sequence" };
+        }),
+      ],
+    },
+    {
+      namespace: "sequence",
+      name: "trigger-itself",
+      sequence: [
+        route(".perform.trigger", () => {
+          return { type: "trigger", key: "sequence.trigger-itself" }; // Yes, this is an infinite loop
         }),
       ],
     },

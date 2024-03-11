@@ -326,6 +326,87 @@ Feature("fake-gcs feature", () => {
     });
   });
 
+  Scenario("Read a file containing an empty string", () => {
+    Given("there's a readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: "" });
+    });
+
+    const readOne = [];
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
+
+      await pipeline(readStream, async function* (iterable) {
+        for await (const data of iterable) {
+          readOne.push(data);
+          yield;
+        }
+      });
+    });
+
+    Then("we should have read an empty string", () => {
+      readOne.join("").should.eql("");
+    });
+  });
+
+  Scenario("Read files containing falsy values", () => {
+    Given("there's a readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: false });
+      fakeGcs.mockFile("gs://some-bucket/dir/file_2.txt", { content: 0 });
+    });
+
+    const readOne = [];
+    const readTwo = [];
+    When("we try to read the files", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
+
+      await pipeline(readStream, async function* (iterable) {
+        for await (const data of iterable) {
+          readOne.push(data);
+          yield;
+        }
+      });
+
+      const readStream2 = storage.bucket("some-bucket").file("dir/file_2.txt").createReadStream();
+
+      await pipeline(readStream2, async function* (iterable) {
+        for await (const data of iterable) {
+          readTwo.push(data);
+          yield;
+        }
+      });
+    });
+
+    Then("we should have read the falsy values", () => {
+      readOne.join("").should.eql("false");
+      readTwo.join("").should.eql("0");
+    });
+  });
+
+  Scenario("Read a file containing another falsy value", () => {
+    Given("there's a readable files", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.txt", { content: 0 });
+    });
+
+    const readOne = [];
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const readStream = storage.bucket("some-bucket").file("dir/file_1.txt").createReadStream();
+
+      await pipeline(readStream, async function* (iterable) {
+        for await (const data of iterable) {
+          readOne.push(data);
+          yield;
+        }
+      });
+    });
+
+    Then("we should have read an empty string", () => {
+      readOne.join("").should.eql("0");
+    });
+  });
+
   Scenario("Get a csv file's metadata from google", () => {
     Given("there's a file", () => {
       fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "some,csv,file\n" });
@@ -338,12 +419,14 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we should have got some metadata", () => {
-      metadata.should.eql({
-        contentEncoding: "utf-8",
-        contentType: "text/csv",
-        name: "file_1.csv",
-        size: 14,
-      });
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "text/csv",
+          name: "file_1.csv",
+          size: 14,
+        },
+      ]);
     });
   });
 
@@ -359,12 +442,14 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we should have got some metadata", () => {
-      metadata.should.eql({
-        contentEncoding: "utf-8",
-        contentType: "application/json",
-        name: "file_1.json",
-        size: 15,
-      });
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "application/json",
+          name: "file_1.json",
+          size: 15,
+        },
+      ]);
     });
   });
 
@@ -380,12 +465,14 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we should have got some metadata", () => {
-      metadata.should.eql({
-        contentEncoding: "utf-8",
-        contentType: "application/gzip",
-        name: "file_1.json.gz",
-        size: 35,
-      });
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "application/gzip",
+          name: "file_1.json.gz",
+          size: 35,
+        },
+      ]);
     });
   });
 
@@ -401,12 +488,37 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we should have got some metadata", () => {
-      metadata.should.eql({
-        contentEncoding: "utf-8",
-        contentType: "text/plain",
-        name: "file_1.txt",
-        size: 9,
-      });
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "text/plain",
+          name: "file_1.txt",
+          size: 9,
+        },
+      ]);
+    });
+  });
+
+  Scenario("Get an empty csv file's metadata from google", () => {
+    Given("there's an empty file", () => {
+      fakeGcs.mockFile("gs://some-bucket/dir/file_1.csv", { content: "" });
+    });
+
+    let metadata;
+    When("we try to read the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      metadata = await storage.bucket("some-bucket").file("dir/file_1.csv").getMetadata();
+    });
+
+    Then("we should have got some metadata", () => {
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "text/csv",
+          name: "file_1.csv",
+          size: "0",
+        },
+      ]);
     });
   });
 
@@ -422,12 +534,14 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we should have got some metadata", () => {
-      metadata.should.eql({
-        contentEncoding: "utf-8",
-        contentType: "application/octet-stream",
-        name: "file_1",
-        size: 9,
-      });
+      metadata.should.eql([
+        {
+          contentEncoding: "utf-8",
+          contentType: "application/octet-stream",
+          name: "file_1",
+          size: 9,
+        },
+      ]);
     });
   });
 
@@ -557,7 +671,7 @@ Feature("fake-gcs feature", () => {
     });
 
     Then("we verify that there is just one", () => {
-      files.should.eql([ filePath ]);
+      files.should.eql([ { id: filePath, name: filePath.replace("gs://some-bucket", "") } ]);
     });
   });
 

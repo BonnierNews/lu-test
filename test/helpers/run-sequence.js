@@ -1,7 +1,7 @@
 import { enablePublish, triggerMessage, recordedMessages, reset } from "./fake-pub-sub.js";
 
-async function runSequence(app, sequenceName, message) {
-  enablePublish(app);
+async function runSequence(app, sequenceName, message, opts = {}) {
+  enablePublish(app, opts);
   try {
     await triggerMessage(app, message, { key: sequenceName });
     const last = recordedMessages()[recordedMessages().length - 1];

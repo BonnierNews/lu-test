@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import ftp from "basic-ftp";
 import { Readable } from "stream";
+import buffer from "buffer";
 
 import * as fakeFTP from "../helpers/fake-ftp.js";
 
@@ -86,6 +87,30 @@ Feature("fake-ftp feature", () => {
     });
     Then("the data should have been written", () => {
       fakeFTP.written(path).should.eql(data);
+    });
+  });
+
+  Scenario("successfully fake putting a file as a buffer with encoding", () => {
+    const specialData = "some ä å ö , . - data";
+    const specialDataInLatin1 = buffer.transcode(Buffer.from(specialData), "utf8", "latin1");
+    Given("we fake putting to some path", () => {
+      fakeFTP.put(path);
+    });
+    let client;
+    And("we can connect to an ftp", async () => {
+      client = new ftp.Client();
+      try {
+        await client.access(ftpConfig);
+      } catch (error) {
+        console.error(error); // eslint-disable-line no-console
+      }
+    });
+    When("uploading some data to the ftp", async () => {
+      const content = Readable.from(specialDataInLatin1);
+      await client.uploadFrom(content, path);
+    });
+    Then("the data should have been written", () => {
+      fakeFTP.written(path, { encoding: "latin1" }).should.eql(specialData);
     });
   });
 

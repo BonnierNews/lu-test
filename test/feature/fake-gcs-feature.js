@@ -10,6 +10,7 @@ import * as fakeGcs from "../helpers/fake-gcs.js";
 const pipeline = promisify(stream.pipeline);
 
 const filePath = "gs://some-bucket/dir/file.txt";
+const filePathBinary = "gs://some-bucket/dir/file.pdf";
 
 Feature("fake-gcs feature", () => {
   beforeEachScenario(fakeGcs.reset);
@@ -161,6 +162,28 @@ Feature("fake-gcs feature", () => {
     Then("we should have read 'some stuff\\n' and 'some other stuff\\n'", () => {
       readOne.join("").should.eql("some stuff\n");
       readTwo.join("").should.eql("some other stuff\n");
+    });
+  });
+
+  Scenario("Write a binary file to google", () => {
+    Given("there's a target we can write to", () => {
+      fakeGcs.mockFile(filePathBinary);
+    });
+    let textBuffer;
+    When("we write the file", async () => {
+      const storage = new Storage(config.gcs.credentials);
+      const writeStream = storage.bucket("some-bucket").file("dir/file.pdf").createWriteStream();
+
+      const readStream = new stream.Readable();
+      textBuffer = Buffer.from("some text\n");
+      readStream.push(textBuffer);
+      readStream.push(textBuffer);
+      readStream.push(null);
+      await pipeline(readStream, writeStream);
+    });
+
+    Then("we should have cached a written file", () => {
+      fakeGcs.written(filePathBinary).should.eql(Buffer.concat([ textBuffer, textBuffer ]));
     });
   });
 

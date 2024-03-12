@@ -146,12 +146,21 @@ function contentType(Key) {
 function getWriter(file) {
   return () => {
     file.written = true;
+    const isBinary = file.name.endsWith(".pdf");
     return new Writable({
       write: function (chunk, _, next) {
-        if (file.content) {
-          file.content += chunk.toString();
+        if (isBinary) {
+          if (file.content) {
+            file.content = Buffer.concat([ file.content, chunk ]);
+          } else {
+            file.content = chunk;
+          }
         } else {
-          file.content = chunk.toString();
+          if (file.content) {
+            file.content += chunk.toString();
+          } else {
+            file.content = chunk.toString();
+          }
         }
         next();
       },

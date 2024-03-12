@@ -2,6 +2,7 @@ import es from "event-stream";
 import ftp from "basic-ftp";
 import { createSandbox } from "sinon";
 import assert from "assert";
+import iconvlite from "iconv-lite";
 
 let writes = {};
 let stub;
@@ -67,7 +68,10 @@ function connectionError(message = "ftp connection failed") {
   };
 }
 
-function written(path) {
+function written(path, opts) {
+  if (opts?.encoding) {
+    return iconvlite.decode(writes[path], opts.encoding);
+  }
   if (Buffer.isBuffer(writes[path])) {
     return writes[path].toString();
   }

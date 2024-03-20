@@ -132,11 +132,6 @@ async function messageHandler(recipeMap, req, res) {
   return;
 }
 
-function resumeHandler(req, res) {
-  res.status(200).send();
-  return;
-}
-
 function start({ recipes, triggers }) {
   const router = expressPromiseRouter();
   const app = express();
@@ -145,8 +140,6 @@ function start({ recipes, triggers }) {
   const recipeMap = initRecipes(recipes, triggers);
 
   router.post("/message", messageHandler.bind(messageHandler, recipeMap));
-
-  router.post("/resume-message", resumeHandler.bind(resumeHandler));
 
   app.use(router);
 

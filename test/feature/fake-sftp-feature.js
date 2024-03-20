@@ -252,6 +252,70 @@ Feature("fake-sftp get feature", () => {
     });
   });
 
+  Scenario("successfully fake getting a file with opts", () => {
+    const latin1Data = buffer.transcode(Buffer.from("däta"), "utf8", "latin1");
+    Given("we fake getting a file", () => {
+      fakeSftp.getAsStream(`${path}/${file}`, latin1Data, { encoding: "latin1" });
+    });
+    let client;
+    And("we can connect to an sftp", async () => {
+      client = new SftpClient();
+      await client.connect(sftpConfig);
+    });
+    let response;
+    When("getting a file from the sftp", async () => {
+      response = await client.get(`${path}/${file}`, undefined, { readStreamOptions: { encoding: "latin1" } });
+    });
+    Then("we should have received the data", () => {
+      response.toString().should.eql("däta");
+    });
+    let secondResponse = "";
+    When("getting the file from the sftp as a stream", async () => {
+      const writeStream = new Writable();
+
+      writeStream._write = (chunk, encoding, next) => {
+        secondResponse += chunk.toString();
+        next();
+      };
+      await client.get(`${path}/${file}`, writeStream, { readStreamOptions: { encoding: "latin1" } });
+    });
+    Then("we should have received the data", () => {
+      secondResponse.toString().should.eql("däta");
+    });
+  });
+
+  Scenario("unsuccessfully fake getting a file with the wrong encoding", () => {
+    const latin1Data = buffer.transcode(Buffer.from("däta"), "utf8", "latin1");
+    Given("we fake getting a file", () => {
+      fakeSftp.getAsStream(`${path}/${file}`, latin1Data, { encoding: "utf8" });
+    });
+    let client;
+    And("we can connect to an sftp", async () => {
+      client = new SftpClient();
+      await client.connect(sftpConfig);
+    });
+    let response;
+    When("getting a file from the sftp", async () => {
+      response = await client.get(`${path}/${file}`, undefined, { readStreamOptions: { encoding: "latin1" } });
+    });
+    Then("we should have received the data with the wrong encoding", () => {
+      response.toString().should.eql(latin1Data.toString());
+    });
+    let secondResponse = "";
+    When("getting the file from the sftp as a stream", async () => {
+      const writeStream = new Writable();
+
+      writeStream._write = (chunk, encoding, next) => {
+        secondResponse += chunk.toString();
+        next();
+      };
+      await client.get(`${path}/${file}`, writeStream, { readStreamOptions: { encoding: "latin1" } });
+    });
+    Then("we should have received the data with the wrong encoding", () => {
+      secondResponse.toString().should.eql(latin1Data.toString());
+    });
+  });
+
   Scenario("successfully fake getting some files", () => {
     Given("we fake getting some files", () => {
       const expectedFileContent = {};

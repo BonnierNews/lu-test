@@ -19,25 +19,26 @@ function init() {
   }
 }
 
-function get(expectedPath, content) {
+function get(expectedPath, content, opts) {
   stub.get = (actualPath, writeStream) => {
     assert(expectedPath === actualPath, `expected path ${expectedPath} but got ${actualPath}`);
+    const realContent = opts?.encoding ? buff.transcode(Buffer.from(content), opts.encoding, "utf8") : Buffer.from(content);
+
     if (!writeStream) {
       // if the is no witeStream return content as a buffer
-      const buffer = Buffer.from(content);
       return new Promise((resolve) => {
-        return resolve(buffer);
+        return resolve(realContent);
       });
     }
-    const stream = Readable.from([ content ]);
+    const stream = Readable.from([ realContent ]);
     return stream.pipe(writeStream);
   };
 }
 
-function getAsStream(expectedPath, content) {
+function getAsStream(expectedPath, content, opts = {}) {
   init();
   stub.connect = () => {};
-  get(expectedPath, content);
+  get(expectedPath, content, opts);
 }
 
 function getMany(expectedFiles) {

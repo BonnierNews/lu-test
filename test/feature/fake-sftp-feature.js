@@ -235,7 +235,7 @@ Feature("fake-sftp get feature", () => {
       response = await client.get(`${path}/${file}`);
     });
     Then("we should have received the data", () => {
-      response.toString().should.eql(data);
+      response.should.eql(data);
     });
     let secondResponse = "";
     When("getting the file from the sftp as a stream", async () => {
@@ -248,7 +248,7 @@ Feature("fake-sftp get feature", () => {
       await client.get(`${path}/${file}`, writeStream);
     });
     Then("we should have received the data", () => {
-      secondResponse.toString().should.eql(data);
+      secondResponse.should.eql(data);
     });
   });
 

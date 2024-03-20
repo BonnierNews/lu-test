@@ -23,14 +23,15 @@ function get(expectedPath, content, opts) {
   stub.get = (actualPath, writeStream) => {
     assert(expectedPath === actualPath, `expected path ${expectedPath} but got ${actualPath}`);
     const realContent = opts?.encoding ? buff.transcode(Buffer.from(content), opts.encoding, "utf8") : Buffer.from(content);
+    const result = Buffer.isBuffer(content) ? realContent : realContent.toString();
 
     if (!writeStream) {
       // if the is no witeStream return content as a buffer
       return new Promise((resolve) => {
-        return resolve(realContent);
+        return resolve(result);
       });
     }
-    const stream = Readable.from([ realContent ]);
+    const stream = Readable.from([ result ]);
     return stream.pipe(writeStream);
   };
 }

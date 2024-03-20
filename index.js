@@ -2,7 +2,7 @@ export { assertRejected, assertRetry, assertUnrecoverable } from "./test/helpers
 export { default as buildMessage } from "./test/helpers/build-message.js";
 export { default as clone } from "./test/helpers/clone.js";
 export { default as fakeApi } from "./test/helpers/fake-api.js";
-export * as fakeCloudTask from "./test/helpers/fake-cloud-task.js";
+export * as fakeCloudTasks from "./test/helpers/fake-cloud-tasks.js";
 export * as fakeFtp from "./test/helpers/fake-ftp.js";
 export * as fakeGcpAuth from "./test/helpers/fake-gcp-auth.js";
 export * as fakeGcs from "./test/helpers/fake-gcs.js";

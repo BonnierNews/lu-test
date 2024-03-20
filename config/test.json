@@ -11,5 +11,9 @@
     "accessKeyId": "REPLACED_BY_ENV",
     "secretAccessKey": "REPLACED_BY_ENV"
   },
+  "cloudTasks": {
+    "queue": "projects/project-id/locations/location/queues/foo-queue",
+    "selfUrl": "http://example.com"
+  },
   "gcpProxy": { "url": "http://example.com", "audience": "some-audience" }
 }

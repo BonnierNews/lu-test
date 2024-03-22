@@ -75,15 +75,7 @@ async function publish(
     deliveryAttempt,
   };
   try {
-    const response = await requestAgent.post("/message").send(message);
-    if (response.status >= 400) {
-      const error = Error(`Got error when publishing message ${JSON.stringify(message)}`);
-      error.statusCode = response.status;
-      error.body = response.body;
-      error.text = response.text;
-      throw error;
-    }
-    return response;
+    return await requestAgent.post("/message").send(message);
     /* c8 ignore next 4 */
   } catch (error) {
     console.error("Error in fake-pub-sub :>> ", error); // eslint-disable-line no-console

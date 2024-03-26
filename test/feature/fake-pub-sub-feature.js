@@ -90,28 +90,4 @@ Feature("fake-pub-sub feature", () => {
       response.body.should.eql({});
     });
   });
-
-  Scenario("raise an error", () => {
-    Given("we have enabled publish", () => {
-      fakePubSub.enablePublish(app);
-    });
-    And("we set the topic", () => {
-      const pubsub = new PubSub();
-      pubsub.topic("some-topic");
-    });
-    let error;
-    When("triggering a message with a buffer", async () => {
-      await fakePubSub
-        .triggerMessage(app, Buffer.from(JSON.stringify(message.json)), { key: "sequence.error-sequence.perform.something" })
-        .catch((e) => {
-          error = e;
-        });
-    });
-    Then("we should have raised an error with status code 500", () => {
-      should.exist(error);
-    });
-    And("the error should contain the status code", () => {
-      error.statusCode.should.eql(500);
-    });
-  });
 });

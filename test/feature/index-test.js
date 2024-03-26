@@ -15,7 +15,7 @@ const expectedExports = [
   "assertRejected",
   "assertRetry",
   "buildMessage",
-  "fakeCloudTask",
+  "fakeCloudTasks",
   "fakeGcpAuth",
   "fakePubSub",
   "runSequence",

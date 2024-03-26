@@ -1,6 +1,6 @@
 {
   "name": "@bonniernews/lu-test",
-  "version": "8.2.1",
+  "version": "9.0.0",
   "description": "Test helpers.",
   "main": "index.js",
   "engines": {
@@ -24,7 +24,7 @@
   "dependencies": {
     "@google-cloud/pubsub": "^4.0.7",
     "@google-cloud/storage": "^7.7.0",
-    "@google-cloud/tasks": "^5.1.0",
+    "@google-cloud/tasks": "^5.1.1",
     "basic-ftp": "^5.0.3",
     "chai": "^4.3.10",
     "csv-parse": "^5.5.2",

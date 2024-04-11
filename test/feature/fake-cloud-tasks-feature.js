@@ -44,6 +44,7 @@ Feature("fake-cloud-task feature", () => {
       response = await cloudTask.createTask({
         parent: config.cloudTasks.queue,
         task: {
+          name: "test-task",
           httpRequest: {
             url: `${config.cloudTasks.selfUrl}/foo/bar`,
             httpMethod: "post",
@@ -64,6 +65,7 @@ Feature("fake-cloud-task feature", () => {
 
     And("we should have recorded the message", () => {
       fakeCloudTasks.recordedMessages()[0].should.eql({
+        taskName: "test-task",
         queue: config.cloudTasks.queue,
         httpMethod: "post",
         message: { type: "something", id: "some-id" },
@@ -99,6 +101,7 @@ Feature("fake-cloud-task feature", () => {
       response = await cloudTask.createTask({
         parent: config.cloudTasks.queue,
         task: {
+          name: "test-task",
           httpRequest: {
             url: `${config.cloudTasks.selfUrl}/foo/bar`,
             httpMethod: "get",
@@ -118,6 +121,7 @@ Feature("fake-cloud-task feature", () => {
 
     And("we should have recorded the message", () => {
       fakeCloudTasks.recordedMessages()[0].should.eql({
+        taskName: "test-task",
         queue: config.cloudTasks.queue,
         httpMethod: "get",
         url: "/foo/bar",
@@ -163,6 +167,7 @@ Feature("cloud tasks run-sequence feature", () => {
           cloudTask.createTask({
             parent: config.cloudTasks.queue,
             task: {
+              name: `test-${task}`,
               httpRequest: {
                 url: `${config.cloudTasks.selfUrl}/foo/bar`,
                 httpMethod: "post",
@@ -191,6 +196,7 @@ Feature("cloud tasks run-sequence feature", () => {
           queue: config.cloudTasks.queue,
           url: "/foo/bar",
           correlationId: "some-epic-id",
+          taskName: "test-task1",
         },
         {
           message: { task: "task2" },
@@ -199,6 +205,7 @@ Feature("cloud tasks run-sequence feature", () => {
           queue: config.cloudTasks.queue,
           url: "/foo/bar",
           correlationId: "some-epic-id",
+          taskName: "test-task2",
         },
       ]);
     });

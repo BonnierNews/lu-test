@@ -42,7 +42,7 @@ export async function runSequence(broker, url, body, headers = {}) {
     await processMessages();
 
     const last = messages.slice(-1)[0];
-    const triggeredFlows = [ ...new Set(recordedMessages().map((o) => o.url.split("/").slice(0, 2).join("."))) ];
+    const triggeredFlows = [ ...new Set(recordedMessages().map((o) => o.url.split("/").slice(-3, -1).join("."))) ];
     return {
       ...last,
       triggeredFlows,

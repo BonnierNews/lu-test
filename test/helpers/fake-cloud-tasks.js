@@ -42,7 +42,7 @@ export async function runSequence(broker, url, body, headers = {}) {
     await processMessages();
 
     const last = messages.slice(-1)[0];
-    const triggeredFlows = [ ...new Set(recordedMessages().map((o) => o.url.split("/").slice(0, 2).join("."))) ];
+    const triggeredFlows = [ ...new Set(recordedMessages().map((o) => o.url.split("/").slice(-3, -1).join("."))) ];
     return {
       ...last,
       triggeredFlows,
@@ -65,12 +65,15 @@ export async function processMessages() {
 
 async function handleMessage({
   parent,
-  task: { httpRequest: { httpMethod, headers, url, body } },
-  taskName,
+  task: {
+    name = "test-task",
+    httpRequest: { httpMethod, headers, url, body },
+  },
 }) {
   const relativeUrl = url.replace(config.cloudTasks.selfUrl, "");
   const queueName = parent.split("/").pop();
   const bodyObject = body ? JSON.parse(body.toString()) : undefined;
+  const taskName = name;
 
   const cloudRunHeaders = {
     "X-CloudTasks-QueueName": queueName,
@@ -82,6 +85,7 @@ async function handleMessage({
 
   messages.push({
     queue: parent,
+    taskName,
     httpMethod,
     headers,
     url: relativeUrl,

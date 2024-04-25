@@ -37,7 +37,7 @@
     "nock": "^13.4.0",
     "sinon": "^17.0.1",
     "ssh2-sftp-client": "^9.1.0",
-    "supertest": "^6.3.3"
+    "supertest": "^7.0.0"
   },
   "devDependencies": {
     "@bonniernews/eslint-config": "^1.1.0",

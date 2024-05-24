@@ -17,8 +17,6 @@ const expectedExports = [
   "buildMessage",
   "fakeCloudTasks",
   "fakeGcpAuth",
-  "fakePubSub",
-  "runSequence",
   "assertUnrecoverable",
 ];
 

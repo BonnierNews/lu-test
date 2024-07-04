@@ -104,6 +104,10 @@ async function handleMessage({
     error: response.error,
     url: response.req.path,
   });
+  if (response.statusCode !== 200) {
+    const usefulStuff = { statusCode: response.statusCode, body: response.body };
+    throw new Error(`Failed to process message, check the logs: ${JSON.stringify(usefulStuff)}`);
+  }
 }
 
 export function reset() {

@@ -259,7 +259,7 @@ Feature("cloud tasks run-sequence feature", () => {
 
     Then("we should receive an error", () => {
       result.message.should.eql(
-        'Failed to process message, check the logs: {"statusCode":500,"body":{"errors":[{"detail":"You broke it!"}]}}'
+        'Failed to process message, check the logs: {"statusCode":500,"body":{"errors":[{"detail":"You broke it!"}]},"text":"{\\"errors\\":[{\\"detail\\":\\"You broke it!\\"}]}"}'
       );
     });
   });

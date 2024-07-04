@@ -105,7 +105,7 @@ async function handleMessage({
     url: response.req.path,
   });
   if (response.statusCode > 399) {
-    const usefulStuff = { statusCode: response.statusCode, body: response.body };
+    const usefulStuff = { statusCode: response.statusCode, body: response.body, text: response.text };
     throw new Error(`Failed to process message, check the logs: ${JSON.stringify(usefulStuff)}`);
   }
 }

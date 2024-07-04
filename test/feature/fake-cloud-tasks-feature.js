@@ -216,4 +216,51 @@ Feature("cloud tasks run-sequence feature", () => {
         .should.eql([ { task: "task1" }, { task: "task2" } ]);
     });
   });
+
+  Scenario("Error occurs during sequence processing", () => {
+    let app;
+    Given("a broker", () => {
+      app = express();
+      app.use(express.json());
+      app.post("/sequence", (req, res) => {
+        const cloudTask = new CloudTasksClient();
+        [ "task1", "task2" ].forEach((task) => {
+          cloudTask.createTask({
+            parent: config.cloudTasks.queue,
+            task: {
+              name: `test-${task}`,
+              httpRequest: {
+                url: `${config.cloudTasks.selfUrl}/foo/bar`,
+                httpMethod: "post",
+                headers: { correlationId: "some-epic-id" },
+                body: Buffer.from(JSON.stringify({ task })),
+              },
+            },
+          });
+        });
+        res.status(200).json({ status: "ok" }).send();
+      });
+      app.post("/foo/bar", (req, res) =>
+        res
+          .status(500)
+          .json({ errors: [ { detail: "You broke it!" } ] })
+          .send()
+      );
+    });
+
+    let result;
+    When("running the sequence", async () => {
+      try {
+        await fakeCloudTasks.runSequence(app, "/sequence");
+      } catch (error) {
+        result = error;
+      }
+    });
+
+    Then("we should receive an error", () => {
+      result.message.should.eql(
+        'Failed to process message, check the logs: {"statusCode":500,"body":{"errors":[{"detail":"You broke it!"}]}}'
+      );
+    });
+  });
 });

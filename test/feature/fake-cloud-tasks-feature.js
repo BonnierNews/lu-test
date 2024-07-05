@@ -254,10 +254,12 @@ Feature("cloud tasks run-sequence feature", () => {
         {
           queue: config.cloudTasks.queue,
           url: "/v2/sequence/task1/testing-skipped",
+          message: { task: "task1" },
         },
         {
           queue: config.cloudTasks.queue,
           url: "/v2/sequence/task2/testing-skipped",
+          message: { task: "task2" },
         },
       ]);
     });
@@ -266,6 +268,21 @@ Feature("cloud tasks run-sequence feature", () => {
       result.messageHandlerResponses
         .map((response) => response.body)
         .should.eql([ "Triggered sequence skipped", "Triggered sequence skipped" ]);
+    });
+
+    And("the sequences should have been triggered with the expected messages", () => {
+      result.triggeredSequences.should.eql([
+        {
+          queue: "projects/project-id/locations/location/queues/foo-queue",
+          url: "/v2/sequence/task1/testing-skipped",
+          message: { task: "task1" },
+        },
+        {
+          queue: "projects/project-id/locations/location/queues/foo-queue",
+          url: "/v2/sequence/task2/testing-skipped",
+          message: { task: "task2" },
+        },
+      ]);
     });
   });
 
@@ -310,6 +327,29 @@ Feature("cloud tasks run-sequence feature", () => {
       result.messageHandlerResponses
         .map((response) => response.body)
         .should.eql([ { task: "task1" }, { task: "task2" } ]);
+    });
+
+    And("the sequences should have been triggered with the expected messages", () => {
+      result.triggeredSequences.should.eql([
+        {
+          queue: "projects/project-id/locations/location/queues/foo-queue",
+          taskName: "test-task1",
+          httpMethod: "post",
+          headers: { correlationId: "some-epic-id" },
+          url: "/v2/sequence/task1",
+          message: { task: "task1" },
+          correlationId: "some-epic-id",
+        },
+        {
+          queue: "projects/project-id/locations/location/queues/foo-queue",
+          taskName: "test-task2",
+          httpMethod: "post",
+          headers: { correlationId: "some-epic-id" },
+          url: "/v2/sequence/task2",
+          message: { task: "task2" },
+          correlationId: "some-epic-id",
+        },
+      ]);
     });
   });
 

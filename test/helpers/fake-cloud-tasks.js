@@ -11,6 +11,8 @@ const messageQueue = []; // Will be used as the actual message queue
 const messages = [];
 const messageHandlerResponses = [];
 
+const triggerSequenceRegEx = /^\/v2\/sequence\/[^/]+$/;
+
 function init() {
   if (!stub) {
     stub = sandbox.stub(CloudTasksClient.prototype);
@@ -43,9 +45,12 @@ export async function runSequence(broker, url, body, headers = {}, skipSequenceT
 
     const last = messages.slice(-1)[0];
     const triggeredFlows = [ ...new Set(recordedMessages().map((o) => o.url.split("/").slice(-3, -1).join("."))) ];
+
+    const triggeredSequences = recordedMessages().filter((o) => o.url.match(triggerSequenceRegEx) || o.url.split("/").pop() === "testing-skipped");
     return {
       ...last,
       triggeredFlows,
+      triggeredSequences,
       firstResponse,
       messages: [ ...recordedMessages() ],
       messageHandlerResponses: [ ...recordedMessageHandlerResponses() ],
@@ -74,15 +79,15 @@ async function handleMessage(
   skipSequenceTriggers
 ) {
   const relativeUrl = url.replace(config.cloudTasks.selfUrl, "");
+  const bodyObject = body ? JSON.parse(body.toString()) : undefined;
 
-  if (skipSequenceTriggers && relativeUrl.match(/^\/v2\/sequence\/[^/]+$/)) {
-    messages.push({ queue: parent, url: `${relativeUrl}/testing-skipped` });
+  if (skipSequenceTriggers && relativeUrl.match(triggerSequenceRegEx)) {
+    messages.push({ queue: parent, url: `${relativeUrl}/testing-skipped`, ...(bodyObject && { message: bodyObject }) });
     messageHandlerResponses.push({ statusCode: 200, body: "Triggered sequence skipped", url: relativeUrl });
     return;
   }
 
   const queueName = parent.split("/").pop();
-  const bodyObject = body ? JSON.parse(body.toString()) : undefined;
   const taskName = name;
 
   const cloudRunHeaders = {

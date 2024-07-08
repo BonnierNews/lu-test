@@ -46,11 +46,11 @@ export async function runSequence(broker, url, body, headers = {}, skipSequenceT
     const last = messages.slice(-1)[0];
     const triggeredFlows = [ ...new Set(recordedMessages().map((o) => o.url.split("/").slice(-3, -1).join("."))) ];
 
-    const triggeredSequences = recordedMessages().filter((o) => o.url.match(triggerSequenceRegEx) || o.url.split("/").pop() === "testing-skipped");
+    const notTestedSequences = recordedMessages().filter((o) => o.url.split("/").pop() === "testing-skipped");
     return {
       ...last,
       triggeredFlows,
-      triggeredSequences,
+      notTestedSequences,
       firstResponse,
       messages: [ ...recordedMessages() ],
       messageHandlerResponses: [ ...recordedMessageHandlerResponses() ],
@@ -83,7 +83,7 @@ async function handleMessage(
 
   if (skipSequenceTriggers && relativeUrl.match(triggerSequenceRegEx)) {
     messages.push({ queue: parent, url: `${relativeUrl}/testing-skipped`, ...(bodyObject && { message: bodyObject }) });
-    messageHandlerResponses.push({ statusCode: 200, body: "Triggered sequence skipped", url: relativeUrl });
+    messageHandlerResponses.push({ statusCode: 200, body: "Triggered sequence not tested", url: relativeUrl });
     return;
   }
 

@@ -249,7 +249,7 @@ Feature("cloud tasks run-sequence feature", () => {
       result = await fakeCloudTasks.runSequence(app, "/sequence");
     });
 
-    Then("two sequences should have been skipped", () => {
+    Then("two sequences should have been not have been tested", () => {
       result.messages.should.eql([
         {
           queue: config.cloudTasks.queue,
@@ -264,14 +264,14 @@ Feature("cloud tasks run-sequence feature", () => {
       ]);
     });
 
-    And("the sequences should have been skipped", () => {
+    And("the sequences should not have been tested", () => {
       result.messageHandlerResponses
         .map((response) => response.body)
-        .should.eql([ "Triggered sequence skipped", "Triggered sequence skipped" ]);
+        .should.eql([ "Triggered sequence not tested", "Triggered sequence not tested" ]);
     });
 
     And("the sequences should have been triggered with the expected messages", () => {
-      result.triggeredSequences.should.eql([
+      result.notTestedSequences.should.eql([
         {
           queue: "projects/project-id/locations/location/queues/foo-queue",
           url: "/v2/sequence/task1/testing-skipped",
@@ -330,7 +330,7 @@ Feature("cloud tasks run-sequence feature", () => {
     });
 
     And("the sequences should have been triggered with the expected messages", () => {
-      result.triggeredSequences.should.eql([
+      result.messages.should.eql([
         {
           queue: "projects/project-id/locations/location/queues/foo-queue",
           taskName: "test-task1",

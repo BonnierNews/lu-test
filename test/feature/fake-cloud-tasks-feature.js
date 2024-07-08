@@ -153,6 +153,25 @@ Feature("fake-cloud-task feature", () => {
   });
 });
 
+const sequenceTriggeringSequence = (req, res) => {
+  const cloudTask = new CloudTasksClient();
+  [ "task1", "task2" ].forEach((task) => {
+    cloudTask.createTask({
+      parent: config.cloudTasks.queue,
+      task: {
+        name: `test-${task}`,
+        httpRequest: {
+          url: `${config.cloudTasks.selfUrl}/v2/sequence/${task}`,
+          httpMethod: "post",
+          headers: { correlationId: "some-epic-id" },
+          body: Buffer.from(JSON.stringify({ task })),
+        },
+      },
+    });
+  });
+  res.status(200).json({ status: "ok" }).send();
+};
+
 Feature("cloud tasks run-sequence feature", () => {
   beforeEachScenario(fakeCloudTasks.reset);
 
@@ -214,6 +233,123 @@ Feature("cloud tasks run-sequence feature", () => {
       result.messageHandlerResponses
         .map((response) => response.body)
         .should.eql([ { task: "task1" }, { task: "task2" } ]);
+    });
+  });
+
+  Scenario("successfully run a sequence, skipping the triggering of a sequence", () => {
+    let app;
+    Given("a broker", () => {
+      app = express();
+      app.use(express.json());
+      app.post("/sequence", sequenceTriggeringSequence);
+    });
+
+    let result;
+    When("running the sequence", async () => {
+      result = await fakeCloudTasks.runSequence(app, "/sequence");
+    });
+
+    Then("two sequences should have been not have been tested", () => {
+      result.messages.should.eql([
+        {
+          queue: config.cloudTasks.queue,
+          url: "/v2/sequence/task1/testing-skipped",
+          message: { task: "task1" },
+        },
+        {
+          queue: config.cloudTasks.queue,
+          url: "/v2/sequence/task2/testing-skipped",
+          message: { task: "task2" },
+        },
+      ]);
+    });
+
+    And("the sequences should not have been tested", () => {
+      result.messageHandlerResponses
+        .map((response) => response.body)
+        .should.eql([ "Triggered sequence not tested", "Triggered sequence not tested" ]);
+    });
+
+    And("the sequences should have been triggered with the expected messages", () => {
+      result.notTestedSequences.should.eql([
+        {
+          queue: "projects/project-id/locations/location/queues/foo-queue",
+          url: "/v2/sequence/task1/testing-skipped",
+          message: { task: "task1" },
+        },
+        {
+          queue: "projects/project-id/locations/location/queues/foo-queue",
+          url: "/v2/sequence/task2/testing-skipped",
+          message: { task: "task2" },
+        },
+      ]);
+    });
+  });
+
+  Scenario("successfully run a sequence, and trigger another sequence from it", () => {
+    let app;
+    Given("a broker", () => {
+      app = express();
+      app.use(express.json());
+      app.post("/sequence", sequenceTriggeringSequence);
+      app.post("/v2/sequence/:task", (req, res) => res.status(200).json({ task: req.params.task }).send());
+    });
+
+    let result;
+    When("running the sequence", async () => {
+      result = await fakeCloudTasks.runSequence(app, "/sequence", undefined, {}, false);
+    });
+
+    Then("two messages should have been published", () => {
+      result.messages.should.eql([
+        {
+          message: { task: "task1" },
+          headers: { correlationId: "some-epic-id" },
+          httpMethod: "post",
+          queue: config.cloudTasks.queue,
+          url: "/v2/sequence/task1",
+          correlationId: "some-epic-id",
+          taskName: "test-task1",
+        },
+        {
+          message: { task: "task2" },
+          headers: { correlationId: "some-epic-id" },
+          httpMethod: "post",
+          queue: config.cloudTasks.queue,
+          url: "/v2/sequence/task2",
+          correlationId: "some-epic-id",
+          taskName: "test-task2",
+        },
+      ]);
+    });
+
+    And("the messages should have been processed", () => {
+      result.messageHandlerResponses
+        .map((response) => response.body)
+        .should.eql([ { task: "task1" }, { task: "task2" } ]);
+    });
+
+    And("the sequences should have been triggered with the expected messages", () => {
+      result.messages.should.eql([
+        {
+          queue: "projects/project-id/locations/location/queues/foo-queue",
+          taskName: "test-task1",
+          httpMethod: "post",
+          headers: { correlationId: "some-epic-id" },
+          url: "/v2/sequence/task1",
+          message: { task: "task1" },
+          correlationId: "some-epic-id",
+        },
+        {
+          queue: "projects/project-id/locations/location/queues/foo-queue",
+          taskName: "test-task2",
+          httpMethod: "post",
+          headers: { correlationId: "some-epic-id" },
+          url: "/v2/sequence/task2",
+          message: { task: "task2" },
+          correlationId: "some-epic-id",
+        },
+      ]);
     });
   });
 

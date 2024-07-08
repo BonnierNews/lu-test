@@ -11,6 +11,8 @@ const messageQueue = []; // Will be used as the actual message queue
 const messages = [];
 const messageHandlerResponses = [];
 
+const triggerSequenceRegEx = /^\/v2\/sequence\/[^/]+$/;
+
 function init() {
   if (!stub) {
     stub = sandbox.stub(CloudTasksClient.prototype);
@@ -35,17 +37,20 @@ export function enablePublish(broker) {
  * @param {Object} headers - The headers of the first request
  * @returns {Promise<{last: Object, triggeredFlows: string[], firstResponse: supertest.Response, messages: object[], messageHandlerResponses: object[]}>}
  */
-export async function runSequence(broker, url, body, headers = {}) {
+export async function runSequence(broker, url, body, headers = {}, skipSequenceTriggers = true) {
   enablePublish(broker);
   try {
     const firstResponse = await requestAgent.post(url).set(headers).send(body);
-    await processMessages();
+    await processMessages(skipSequenceTriggers);
 
     const last = messages.slice(-1)[0];
     const triggeredFlows = [ ...new Set(recordedMessages().map((o) => o.url.split("/").slice(-3, -1).join("."))) ];
+
+    const notTestedSequences = recordedMessages().filter((o) => o.url.split("/").pop() === "testing-skipped");
     return {
       ...last,
       triggeredFlows,
+      notTestedSequences,
       firstResponse,
       messages: [ ...recordedMessages() ],
       messageHandlerResponses: [ ...recordedMessageHandlerResponses() ],
@@ -55,24 +60,34 @@ export async function runSequence(broker, url, body, headers = {}) {
   }
 }
 
-export async function processMessages() {
+export async function processMessages(skipSequenceTriggers) {
   assert(requestAgent, "You must call `enablePublish` before processing messages");
   while (messageQueue.length) {
     const message = messageQueue.shift();
-    await handleMessage(message);
+    await handleMessage(message, skipSequenceTriggers);
   }
 }
 
-async function handleMessage({
-  parent,
-  task: {
-    name = "test-task",
-    httpRequest: { httpMethod, headers, url, body },
+async function handleMessage(
+  {
+    parent,
+    task: {
+      name = "test-task",
+      httpRequest: { httpMethod, headers, url, body },
+    },
   },
-}) {
+  skipSequenceTriggers
+) {
   const relativeUrl = url.replace(config.cloudTasks.selfUrl, "");
-  const queueName = parent.split("/").pop();
   const bodyObject = body ? JSON.parse(body.toString()) : undefined;
+
+  if (skipSequenceTriggers && relativeUrl.match(triggerSequenceRegEx)) {
+    messages.push({ queue: parent, url: `${relativeUrl}/testing-skipped`, ...(bodyObject && { message: bodyObject }) });
+    messageHandlerResponses.push({ statusCode: 200, body: "Triggered sequence not tested", url: relativeUrl });
+    return;
+  }
+
+  const queueName = parent.split("/").pop();
   const taskName = name;
 
   const cloudRunHeaders = {
@@ -92,6 +107,7 @@ async function handleMessage({
     ...(bodyObject && { message: bodyObject }),
     correlationId: headers["correlation-id"] || headers.correlationId,
   });
+
   const response = await requestAgent[httpMethod.toLowerCase()](relativeUrl)
     .set({ ...headers, ...cloudRunHeaders })
     .send(bodyObject);

@@ -2,6 +2,8 @@
 
 As of August 2024 this package is deprecated and will receive no further updates.
 
+Any internal changes should be made directly in `lu-greenfield`
+
 ## lu-test
 
 Test helpers.
